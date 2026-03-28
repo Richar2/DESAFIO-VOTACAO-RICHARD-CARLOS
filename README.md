@@ -1,16 +1,16 @@
-# API de Votação Cooperativa
+# API de Votacao Cooperativa
 
-API REST para gerenciar sessões de votação de pautas em um contexto cooperativista.
+API REST para gerenciar sessoes de votacao de pautas em cooperativas. Desenvolvida como desafio tecnico backend.
 
 ## Tecnologias
 
-- **Java 17**
-- **Spring Boot 3.2.3**
-- **PostgreSQL 15**
-- **Flyway** (versionamento de banco)
+- **Java 17** + **Spring Boot 3.2.3**
+- **PostgreSQL 15** com **Flyway** (migrations)
 - **Docker & Docker Compose**
-- **JUnit 5 + Mockito** (testes)
+- **JUnit 5 + Mockito** (32 testes)
 - **Springdoc OpenAPI** (Swagger UI)
+- **Bucket4j** (rate limiting)
+- **Lombok**
 
 ## Como executar
 
@@ -20,76 +20,20 @@ API REST para gerenciar sessões de votação de pautas em um contexto cooperati
 docker compose up --build
 ```
 
-A aplicação estará disponível em `http://localhost:8080`.
+A aplicacao estara disponivel em `http://localhost:8081`.
 
-### Sem Docker (desenvolvimento local)
+### Sem Docker
 
 Requisitos: Java 17, Maven 3.9+, PostgreSQL rodando na porta 5432.
 
 ```bash
-# Criar banco
 createdb votacao
-
-# Rodar aplicação
 ./mvnw spring-boot:run
 ```
 
-## Endpoints
+Neste caso, a aplicacao roda em `http://localhost:8080`.
 
-Base URL: `http://localhost:8080/api/v1`
-
-| Método | Endpoint                          | Descrição                    |
-|--------|-----------------------------------|------------------------------|
-| POST   | `/api/v1/pautas`                  | Cadastrar nova pauta         |
-| POST   | `/api/v1/pautas/{id}/sessoes`     | Abrir sessão de votação      |
-| POST   | `/api/v1/pautas/{id}/votos`       | Registrar voto               |
-| GET    | `/api/v1/pautas/{id}/resultado`   | Consultar resultado          |
-
-### Exemplos de uso
-
-**Criar pauta:**
-```bash
-curl -X POST http://localhost:8080/api/v1/pautas \
-  -H "Content-Type: application/json" \
-  -d '{"titulo": "Reforma do estatuto", "descricao": "Votação sobre alterações no estatuto social"}'
-```
-
-**Abrir sessão (5 minutos):**
-```bash
-curl -X POST http://localhost:8080/api/v1/pautas/1/sessoes \
-  -H "Content-Type: application/json" \
-  -d '{"duracaoMinutos": 5}'
-```
-
-**Abrir sessão (padrão 1 minuto):**
-```bash
-curl -X POST http://localhost:8080/api/v1/pautas/1/sessoes
-```
-
-**Votar:**
-```bash
-curl -X POST http://localhost:8080/api/v1/pautas/1/votos \
-  -H "Content-Type: application/json" \
-  -d '{"associadoId": "assoc-001", "voto": "SIM"}'
-```
-
-**Votar com CPF (bônus):**
-```bash
-curl -X POST http://localhost:8080/api/v1/pautas/1/votos \
-  -H "Content-Type: application/json" \
-  -d '{"associadoId": "assoc-001", "voto": "SIM", "cpf": "12345678901"}'
-```
-
-**Consultar resultado:**
-```bash
-curl http://localhost:8080/api/v1/pautas/1/resultado
-```
-
-## Swagger UI
-
-Disponível em: `http://localhost:8080/swagger-ui.html`
-
-## Testes
+### Executar testes
 
 ```bash
 ./mvnw test
@@ -97,35 +41,148 @@ Disponível em: `http://localhost:8080/swagger-ui.html`
 
 Os testes usam H2 em modo PostgreSQL, sem necessidade de banco externo.
 
-## Decisões de Arquitetura
+## Endpoints
 
-### Arquitetura por camadas
-Organização simples: `controller → service → repository`. Cada camada tem responsabilidade clara, sem abstrações desnecessárias.
+Base URL: `http://localhost:8081/api/v1` (Docker) ou `http://localhost:8080/api/v1` (local)
 
-### Relacionamento Pauta ↔ SessaoVotacao (1:1)
-Optei por `@OneToOne` com constraint `UNIQUE` no `pauta_id` da sessão. Uma pauta tem no máximo uma sessão de votação. Essa decisão simplifica a modelagem e reflete a regra de negócio — se futuramente fosse necessário reabrir votação, bastaria mudar para `@OneToMany`.
+| Metodo | Endpoint                          | Descricao                    |
+|--------|-----------------------------------|------------------------------|
+| POST   | `/api/v1/pautas`                  | Cadastrar nova pauta         |
+| POST   | `/api/v1/pautas/{id}/sessoes`     | Abrir sessao de votacao      |
+| POST   | `/api/v1/pautas/{id}/votos`       | Registrar voto               |
+| GET    | `/api/v1/pautas/{id}/resultado`   | Consultar resultado          |
+
+> O `{id}` nos endpoints e um UUID publico. O id interno (BIGINT) e usado apenas nos relacionamentos do banco.
+
+### Exemplos de uso
+
+**Criar pauta:**
+```bash
+curl -X POST http://localhost:8081/api/v1/pautas \
+  -H "Content-Type: application/json" \
+  -d '{"titulo": "Reforma do estatuto", "descricao": "Alteracoes no estatuto social"}'
+```
+
+Resposta (201):
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "titulo": "Reforma do estatuto",
+  "descricao": "Alteracoes no estatuto social",
+  "createdAt": "2026-03-28T19:00:00.000"
+}
+```
+
+**Abrir sessao (120 segundos):**
+```bash
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes \
+  -H "Content-Type: application/json" \
+  -d '{"duracaoSegundos": 120}'
+```
+
+**Abrir sessao (padrao 60 segundos):**
+```bash
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes
+```
+
+**Votar:**
+```bash
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/votos \
+  -H "Content-Type: application/json" \
+  -d '{"associadoId": "assoc-001", "voto": "SIM"}'
+```
+
+**Votar com CPF (bonus):**
+```bash
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/votos \
+  -H "Content-Type: application/json" \
+  -d '{"associadoId": "assoc-001", "voto": "SIM", "cpf": "52998224725"}'
+```
+
+**Consultar resultado:**
+```bash
+curl http://localhost:8081/api/v1/pautas/{id}/resultado
+```
+
+Resposta (200):
+```json
+{
+  "pautaId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "tituloPauta": "Reforma do estatuto",
+  "totalSim": 15,
+  "totalNao": 8,
+  "totalVotos": 23,
+  "resultado": "APROVADA"
+}
+```
+
+## Swagger UI
+
+Disponivel em: `http://localhost:8081/swagger-ui.html`
+
+## Decisoes de Arquitetura
+
+### Arquitetura em camadas
+`controller -> service -> repository` com interfaces nos services (DIP). Cada camada tem responsabilidade clara.
+
+### Design Patterns aplicados
+
+| Pattern | Onde | Justificativa |
+|---------|------|---------------|
+| **Strategy** | `CpfValidationStrategy` | Desacoplar validacao de CPF da logica de voto. Permite trocar implementacao fake por HTTP real sem alterar o service |
+| **Strategy** | `ResultadoCalculatorStrategy` | Isolar regra de apuracao. Permite trocar maioria simples por maioria qualificada sem modificar o PautaService |
+| **Service Layer** | Todos os services | Regras de negocio isoladas da camada HTTP |
+| **DTO Pattern** | Request/Response DTOs | Separar representacao da API do modelo de dominio |
+| **Repository Pattern** | Spring Data JPA | Abstrai acesso a dados |
+
+### SOLID
+
+- **S**: Controller fino, services focados, mappers isolados
+- **O**: Strategies permitem extensao sem modificacao
+- **L**: Implementacoes substituiveis via interface
+- **I**: Interfaces segregadas por responsabilidade
+- **D**: Services sao interfaces; controller depende de abstracoes
+
+### Identificadores publicos (UUID)
+
+A API expoe UUIDs como identificadores publicos nos endpoints e respostas. Internamente, os relacionamentos e queries usam BIGINT auto-increment para performance. Isso evita expor IDs sequenciais (previssiveis) e melhora a seguranca da API.
 
 ### Versionamento da API (`/api/v1`)
-Estratégia de versionamento via path (URI versioning). É a abordagem mais explícita e fácil de rotear. Quando houver breaking changes, cria-se `/api/v2` com novo controller, mantendo `/api/v1` em paralelo até a depreciação.
 
-### Validação de CPF (Bônus 1)
-Implementado como `CpfValidatorClient` — um componente fake que simula serviço externo. Valida formato (11 dígitos) e retorna aleatoriamente `ABLE_TO_VOTE` ou `UNABLE_TO_VOTE`. Em produção, seria substituído por uma chamada HTTP real (RestTemplate/WebClient).
+Estrategia de versionamento via path. Quando houver breaking changes, cria-se `/api/v2` mantendo `/api/v1` em paralelo.
 
-### Performance para alto volume (Bônus 2)
-- **Índice em `voto.pauta_id`**: acelera contagem de votos e verificação de duplicidade.
-- **Índice em `sessao_votacao.pauta_id`**: acelera busca de sessão por pauta.
-- **Constraint UNIQUE `(pauta_id, associado_id)`**: garante unicidade no banco, independente da aplicação.
-- **Consultas agregadas com COUNT no banco**: o resultado é calculado com `COUNT` direto no SQL — nunca carrega votos em memória.
-- **Verificação de duplicidade com `EXISTS`**: mais eficiente que carregar o voto.
+### Validacao de CPF (Bonus)
 
-### Tratamento de exceções
-`@RestControllerAdvice` centralizado com handlers para:
-- `NotFoundException` → 404
-- `BusinessException` → 422
-- `InvalidCpfException` → 404
-- `MethodArgumentNotValidException` → 400
-- `DataIntegrityViolationException` → 409
-- `Exception` genérica → 500
+Implementado como `CpfValidatorClient` que implementa `CpfValidationStrategy`. Valida formato e digitos verificadores conforme regra da Receita Federal. Rejeita CPFs com todos os digitos iguais. Em producao, basta criar outra implementacao da interface e marca-la como `@Primary`.
+
+### Protecao contra abuso
+
+- **Rate Limiting**: 20 requisicoes por minuto por IP via Bucket4j
+- **Validacao de tamanho**: `@Size` nos DTOs para prevenir payloads abusivos
+- **Bean Validation**: `@NotBlank`, `@NotNull` nos campos obrigatorios
+- **SQL Injection**: prevenido nativamente pelo JPA/Hibernate (queries parametrizadas)
+
+### Performance
+
+- **Indice em `voto.pauta_id`**: acelera contagem e verificacao de duplicidade
+- **Indice em `sessao_votacao.pauta_id`**: acelera busca de sessao
+- **Indice em `uuid`**: busca por identificador publico com custo O(log n)
+- **UNIQUE `(pauta_id, associado_id)`**: unicidade garantida no banco
+- **COUNT no banco**: resultado calculado via SQL agregado, sem carregar votos em memoria
+- **EXISTS para duplicidade**: mais eficiente que SELECT + contagem
+
+### Tratamento de erros
+
+`@RestControllerAdvice` centralizado com respostas padronizadas incluindo `timestamp`, `status`, `error`, `message` e `path`:
+
+| Excecao | HTTP Status |
+|---------|-------------|
+| `NotFoundException` | 404 |
+| `InvalidCpfException` | 400 |
+| `BusinessException` | 422 |
+| `MethodArgumentNotValidException` | 400 |
+| `DataIntegrityViolationException` | 409 |
+| Rate limit excedido | 429 |
 
 ## Estrutura do Projeto
 
@@ -133,32 +190,33 @@ Implementado como `CpfValidatorClient` — um componente fake que simula serviç
 src/main/java/com/cooperativa/votacao/
 ├── VotacaoApplication.java
 ├── client/
-│   └── CpfValidatorClient.java
+│   ├── CpfValidationStrategy.java          # Interface (Strategy)
+│   └── CpfValidatorClient.java             # Implementacao fake
 ├── config/
+│   ├── RateLimitInterceptor.java           # Rate limiting por IP
+│   └── WebConfig.java                      # Registro do interceptor
 ├── controller/
-│   └── PautaController.java
+│   └── PautaController.java               # Endpoints REST
 ├── dto/
-│   ├── CpfValidationResponse.java
-│   ├── ErrorResponse.java
-│   ├── PautaRequest.java
-│   ├── PautaResponse.java
+│   ├── PautaRequest.java / PautaResponse.java
+│   ├── SessaoRequest.java / SessaoResponse.java
+│   ├── VotoRequest.java / VotoResponse.java
 │   ├── ResultadoResponse.java
-│   ├── SessaoRequest.java
-│   ├── SessaoResponse.java
-│   ├── VotoRequest.java
-│   └── VotoResponse.java
+│   ├── CpfValidationResponse.java
+│   └── ErrorResponse.java
 ├── entity/
 │   ├── Pauta.java
 │   ├── SessaoVotacao.java
 │   └── Voto.java
 ├── enums/
-│   ├── StatusCpf.java
-│   └── VotoEnum.java
+│   ├── VotoEnum.java                       # SIM, NAO
+│   ├── StatusCpf.java                      # ABLE_TO_VOTE, UNABLE_TO_VOTE
+│   └── SituacaoResultado.java              # APROVADA, REPROVADA, EMPATE
 ├── exception/
+│   ├── GlobalExceptionHandler.java         # @ControllerAdvice
 │   ├── BusinessException.java
-│   ├── GlobalExceptionHandler.java
-│   ├── InvalidCpfException.java
-│   └── NotFoundException.java
+│   ├── NotFoundException.java
+│   └── InvalidCpfException.java
 ├── mapper/
 │   ├── PautaMapper.java
 │   ├── SessaoMapper.java
@@ -168,7 +226,35 @@ src/main/java/com/cooperativa/votacao/
 │   ├── SessaoVotacaoRepository.java
 │   └── VotoRepository.java
 └── service/
-    ├── PautaService.java
-    ├── SessaoVotacaoService.java
-    └── VotoService.java
+    ├── PautaService.java                   # Interface
+    ├── PautaServiceImpl.java               # Implementacao
+    ├── SessaoVotacaoService.java           # Interface
+    ├── SessaoVotacaoServiceImpl.java       # Implementacao
+    ├── VotoService.java                    # Interface
+    ├── VotoServiceImpl.java                # Implementacao
+    ├── ResultadoCalculatorStrategy.java    # Interface (Strategy)
+    └── MaioriaSimplesCalculatorStrategy.java
 ```
+
+## Testes
+
+32 testes cobrindo:
+
+| Classe | Testes | Cobertura |
+|--------|--------|-----------|
+| PautaControllerTest | 7 | Fluxo completo via MockMvc (criar, sessao, votar, resultado, duplicidade, 404) |
+| PautaServiceTest | 6 | Criar pauta, resultado aprovada/reprovada/empate/sem votos, pauta inexistente |
+| SessaoVotacaoServiceTest | 3 | Duracao padrao, customizada, sessao duplicada |
+| VotoServiceTest | 4 | Voto com sucesso, sessao fechada, voto duplicado, CPF inapto |
+| CpfValidatorClientTest | 7 | CPF valido, mascara, nulo, digitos errados, todos iguais, formato invalido |
+| MaioriaSimplesCalculatorStrategyTest | 4 | Aprovada, reprovada, empate, sem votos |
+| VotacaoApplicationTests | 1 | Context load |
+
+## Melhorias futuras
+
+- Implementacao real do client de CPF via HTTP (substituir o fake)
+- Mensageria com RabbitMQ/Kafka para notificar resultado ao encerrar sessao
+- Cache com Redis para resultados ja encerrados
+- Paginacao no endpoint de listagem de pautas
+- Autenticacao via JWT para identificar associados
+- Scheduler para fechar sessoes expiradas automaticamente
