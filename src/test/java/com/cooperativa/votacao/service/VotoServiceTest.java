@@ -1,11 +1,13 @@
 package com.cooperativa.votacao.service;
 
 import com.cooperativa.votacao.client.CpfValidationStrategy;
+import com.cooperativa.votacao.dto.CpfValidationResponse;
 import com.cooperativa.votacao.dto.VotoRequest;
 import com.cooperativa.votacao.dto.VotoResponse;
 import com.cooperativa.votacao.entity.Pauta;
 import com.cooperativa.votacao.entity.SessaoVotacao;
 import com.cooperativa.votacao.entity.Voto;
+import com.cooperativa.votacao.enums.StatusCpf;
 import com.cooperativa.votacao.enums.VotoEnum;
 import com.cooperativa.votacao.exception.BusinessException;
 import com.cooperativa.votacao.repository.VotoRepository;
@@ -120,5 +122,32 @@ class VotoServiceTest {
         assertThatThrownBy(() -> votoService.votar("pauta-uuid", request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("já votou");
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoCpfInaptoParaVotar() {
+        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
+        SessaoVotacao sessao = SessaoVotacao.builder()
+                .id(1L)
+                .pauta(pauta)
+                .inicioEm(LocalDateTime.now().minusMinutes(1))
+                .fimEm(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
+        when(sessaoVotacaoService.buscarPorPautaId(1L)).thenReturn(sessao);
+        when(votoRepository.existsByPautaIdAndAssociadoId(1L, "assoc-1")).thenReturn(false);
+        when(cpfValidationStrategy.validarCpf("52998224725"))
+                .thenReturn(CpfValidationResponse.builder().status(StatusCpf.UNABLE_TO_VOTE).build());
+
+        VotoRequest request = VotoRequest.builder()
+                .associadoId("assoc-1")
+                .voto(VotoEnum.SIM)
+                .cpf("52998224725")
+                .build();
+
+        assertThatThrownBy(() -> votoService.votar("pauta-uuid", request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("UNABLE_TO_VOTE");
     }
 }
