@@ -31,7 +31,7 @@ votacao-app  | Started VotacaoApplication
 
 | Servico     | URL                                    |
 |-------------|----------------------------------------|
-| API         | http://localhost:8081/api/v1/pautas     |
+| API         | http://localhost:8081/api/v1/agendas     |
 | Swagger UI  | http://localhost:8081/swagger-ui.html   |
 | PostgreSQL  | localhost:5433 (usuario: postgres, senha: postgres) |
 
@@ -100,7 +100,7 @@ Started VotacaoApplication
 
 | Servico     | URL                                    |
 |-------------|----------------------------------------|
-| API         | http://localhost:8080/api/v1/pautas     |
+| API         | http://localhost:8080/api/v1/agendas     |
 | Swagger UI  | http://localhost:8080/swagger-ui.html   |
 
 > As migrations do Flyway sao executadas automaticamente na primeira inicializacao.
@@ -121,10 +121,10 @@ Base URL: `http://localhost:8081/api/v1` (Docker) ou `http://localhost:8080/api/
 
 | Metodo | Endpoint                          | Descricao                    |
 |--------|-----------------------------------|------------------------------|
-| POST   | `/api/v1/pautas`                  | Cadastrar nova pauta         |
-| POST   | `/api/v1/pautas/{id}/sessoes`     | Abrir sessao de votacao      |
-| POST   | `/api/v1/pautas/{id}/votos`       | Registrar voto               |
-| GET    | `/api/v1/pautas/{id}/resultado`   | Consultar resultado          |
+| POST   | `/api/v1/agendas`                  | Cadastrar nova pauta         |
+| POST   | `/api/v1/agendas/{id}/sessions`     | Abrir sessao de votacao      |
+| POST   | `/api/v1/agendas/{id}/votes`       | Registrar voto               |
+| GET    | `/api/v1/agendas/{id}/result`   | Consultar resultado          |
 
 > O `{id}` nos endpoints e um UUID publico. O id interno (BIGINT) e usado apenas nos relacionamentos do banco.
 
@@ -132,59 +132,59 @@ Base URL: `http://localhost:8081/api/v1` (Docker) ou `http://localhost:8080/api/
 
 **Criar pauta:**
 ```bash
-curl -X POST http://localhost:8081/api/v1/pautas \
+curl -X POST http://localhost:8081/api/v1/agendas \
   -H "Content-Type: application/json" \
-  -d '{"titulo": "Reforma do estatuto", "descricao": "Alteracoes no estatuto social"}'
+  -d '{"title": "Reforma do estatuto", "description": "Alteracoes no estatuto social"}'
 ```
 
 Resposta (201):
 ```json
 {
   "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "titulo": "Reforma do estatuto",
-  "descricao": "Alteracoes no estatuto social",
+  "title": "Reforma do estatuto",
+  "description": "Alteracoes no estatuto social",
   "createdAt": "2026-03-28T19:00:00.000"
 }
 ```
 
 **Abrir sessao (120 segundos):**
 ```bash
-curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes \
+curl -X POST http://localhost:8081/api/v1/agendas/{id}/sessions \
   -H "Content-Type: application/json" \
-  -d '{"duracaoSegundos": 120}'
+  -d '{"durationSeconds": 120}'
 ```
 
 **Abrir sessao (padrao 60 segundos):**
 ```bash
-curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes
+curl -X POST http://localhost:8081/api/v1/agendas/{id}/sessions
 ```
 
 **Votar:**
 ```bash
-curl -X POST http://localhost:8081/api/v1/pautas/{id}/votos \
+curl -X POST http://localhost:8081/api/v1/agendas/{id}/votes \
   -H "Content-Type: application/json" \
-  -d '{"associadoId": "assoc-001", "voto": "SIM"}'
+  -d '{"associateId": "assoc-001", "voto": "SIM"}'
 ```
 
 **Votar com CPF (bonus):**
 ```bash
-curl -X POST http://localhost:8081/api/v1/pautas/{id}/votos \
+curl -X POST http://localhost:8081/api/v1/agendas/{id}/votes \
   -H "Content-Type: application/json" \
-  -d '{"associadoId": "assoc-001", "voto": "SIM", "cpf": "52998224725"}'
+  -d '{"associateId": "assoc-001", "voto": "SIM", "cpf": "52998224725"}'
 ```
 
 **Consultar resultado:**
 ```bash
-curl http://localhost:8081/api/v1/pautas/{id}/resultado
+curl http://localhost:8081/api/v1/agendas/{id}/result
 ```
 
 Resposta (200):
 ```json
 {
-  "pautaId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "tituloPauta": "Reforma do estatuto",
-  "totalSim": 15,
-  "totalNao": 8,
+  "agendaId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "agendaTitle": "Reforma do estatuto",
+  "totalYes": 15,
+  "totalNo": 8,
   "totalVotos": 23,
   "resultado": "APROVADA"
 }
@@ -328,41 +328,41 @@ src/main/java/com/cooperativa/votacao/
 
 ```
 ┌──────────────────────────┐
-│          pauta            │
+│          agenda           │
 ├──────────────────────────┤
 │ id          BIGINT    PK │
 │ uuid        VARCHAR   UK │
-│ titulo      VARCHAR  NOT NULL │
-│ descricao   TEXT         │
+│ title       VARCHAR  NOT NULL │
+│ description TEXT         │
 │ created_at  TIMESTAMP    │
 └──────────┬───────────────┘
            │ 1
            │
            │        1
-┌──────────┴───────────────┐       ┌──────────────────────────┐
-│     sessao_votacao        │       │          voto             │
-├──────────────────────────┤       ├──────────────────────────┤
-│ id          BIGINT    PK │       │ id           BIGINT   PK │
-│ uuid        VARCHAR   UK │       │ uuid         VARCHAR  UK │
-│ pauta_id    BIGINT FK UK │       │ pauta_id     BIGINT  FK │
-│ inicio_em   TIMESTAMP    │       │ associado_id VARCHAR     │
-│ fim_em      TIMESTAMP    │       │ cpf          VARCHAR     │
-└──────────────────────────┘       │ voto         VARCHAR(3)  │
-                                   │ criado_em    TIMESTAMP   │
-           │                       ├──────────────────────────┤
-           │ 1                     │ UK (pauta_id, associado_id) │
-           │                       └──────────────────────────┘
+┌──────────┴───────────────┐       ┌───────────────────────────┐
+│     voting_session        │       │          vote              │
+├──────────────────────────┤       ├───────────────────────────┤
+│ id          BIGINT    PK │       │ id            BIGINT   PK │
+│ uuid        VARCHAR   UK │       │ uuid          VARCHAR  UK │
+│ agenda_id   BIGINT FK UK │       │ agenda_id     BIGINT  FK  │
+│ started_at  TIMESTAMP    │       │ associate_id  VARCHAR     │
+│ ended_at    TIMESTAMP    │       │ cpf           VARCHAR     │
+└──────────────────────────┘       │ vote          VARCHAR(3)  │
+                                   │ created_at    TIMESTAMP   │
+           │                       ├───────────────────────────┤
+           │ 1                     │ UK (agenda_id, associate_id) │
+           │                       └───────────────────────────┘
            │ *                                │ *
            └──────────────────────────────────┘
 
-Relacionamentos:
-  pauta 1 ──── 1 sessao_votacao   (uma sessao por pauta)
-  pauta 1 ──── * voto             (muitos votos por pauta)
+Relationships:
+  agenda 1 ──── 1 voting_session   (one session per agenda)
+  agenda 1 ──── * vote             (many votes per agenda)
 
-Indices:
-  idx_voto_pauta_id    → voto(pauta_id)
-  idx_sessao_pauta_id  → sessao_votacao(pauta_id)
-  idx_pauta_uuid       → pauta(uuid)
-  idx_sessao_uuid      → sessao_votacao(uuid)
-  idx_voto_uuid        → voto(uuid)
+Indexes:
+  idx_vote_agenda_id       → vote(agenda_id)
+  idx_session_agenda_id    → voting_session(agenda_id)
+  idx_agenda_uuid          → agenda(uuid)
+  idx_voting_session_uuid  → voting_session(uuid)
+  idx_vote_uuid            → vote(uuid)
 ```
