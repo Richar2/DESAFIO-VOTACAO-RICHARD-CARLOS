@@ -14,9 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/pautas")
+@RequestMapping("/api/v1/agendas")
 @RequiredArgsConstructor
-@Tag(name = "Pautas", description = "Gerenciamento de pautas, sessões de votação e votos")
+@Tag(name = "Agendas", description = "Agenda management, voting sessions and votes")
 public class PautaController {
 
     private final PautaService pautaService;
@@ -24,34 +24,34 @@ public class PautaController {
     private final VotoService votoService;
 
     @PostMapping
-    @Operation(summary = "Criar nova pauta", description = "Cadastra uma pauta para votação")
-    @ApiResponse(responseCode = "201", description = "Pauta criada com sucesso")
+    @Operation(summary = "Create new agenda", description = "Creates an agenda for voting")
+    @ApiResponse(responseCode = "201", description = "Agenda created successfully")
     public ResponseEntity<PautaResponse> criar(@Valid @RequestBody PautaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(pautaService.criar(request));
     }
 
-    @PostMapping("/{pautaId}/sessoes")
-    @Operation(summary = "Abrir sessão de votação", description = "Abre uma sessão para a pauta informada. Duração padrão: 60 segundos")
-    @ApiResponse(responseCode = "201", description = "Sessão aberta com sucesso")
+    @PostMapping("/{agendaId}/sessions")
+    @Operation(summary = "Open voting session", description = "Opens a voting session for the given agenda. Default duration: 60 seconds")
+    @ApiResponse(responseCode = "201", description = "Session opened successfully")
     public ResponseEntity<SessaoResponse> abrirSessao(
-            @PathVariable String pautaId,
+            @PathVariable String agendaId,
             @RequestBody(required = false) SessaoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(sessaoVotacaoService.abrir(pautaId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(sessaoVotacaoService.abrir(agendaId, request));
     }
 
-    @PostMapping("/{pautaId}/votos")
-    @Operation(summary = "Registrar voto", description = "Registra o voto de um associado na pauta")
-    @ApiResponse(responseCode = "201", description = "Voto registrado com sucesso")
+    @PostMapping("/{agendaId}/votes")
+    @Operation(summary = "Register vote", description = "Registers an associate's vote on the agenda")
+    @ApiResponse(responseCode = "201", description = "Vote registered successfully")
     public ResponseEntity<VotoResponse> votar(
-            @PathVariable String pautaId,
+            @PathVariable String agendaId,
             @Valid @RequestBody VotoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(votoService.votar(pautaId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(votoService.votar(agendaId, request));
     }
 
-    @GetMapping("/{pautaId}/resultado")
-    @Operation(summary = "Consultar resultado", description = "Retorna a contagem de votos e o resultado da pauta")
-    @ApiResponse(responseCode = "200", description = "Resultado retornado com sucesso")
-    public ResponseEntity<ResultadoResponse> resultado(@PathVariable String pautaId) {
-        return ResponseEntity.ok(pautaService.obterResultado(pautaId));
+    @GetMapping("/{agendaId}/result")
+    @Operation(summary = "Get result", description = "Returns the vote count and result for the agenda")
+    @ApiResponse(responseCode = "200", description = "Result returned successfully")
+    public ResponseEntity<ResultadoResponse> resultado(@PathVariable String agendaId) {
+        return ResponseEntity.ok(pautaService.obterResultado(agendaId));
     }
 }

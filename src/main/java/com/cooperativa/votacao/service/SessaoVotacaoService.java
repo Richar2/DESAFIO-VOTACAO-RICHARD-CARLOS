@@ -6,7 +6,7 @@ import com.cooperativa.votacao.entity.SessaoVotacao;
 
 public interface SessaoVotacaoService {
 
-    SessaoResponse abrir(String pautaUuid, SessaoRequest request);
+    SessaoResponse abrir(String agendaUuid, SessaoRequest request);
 
-    SessaoVotacao buscarPorPautaId(Long pautaId);
+    SessaoVotacao findByAgendaId(Long agendaId);
 }

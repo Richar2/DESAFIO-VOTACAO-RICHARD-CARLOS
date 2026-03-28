@@ -31,26 +31,26 @@ public class PautaServiceImpl implements PautaService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResultadoResponse obterResultado(String pautaUuid) {
-        Pauta pauta = buscarPorUuid(pautaUuid);
+    public ResultadoResponse obterResultado(String agendaUuid) {
+        Pauta pauta = findByUuid(agendaUuid);
 
-        long votosSim = votoRepository.countByPautaIdAndVoto(pauta.getId(), VotoEnum.SIM);
-        long votosNao = votoRepository.countByPautaIdAndVoto(pauta.getId(), VotoEnum.NAO);
+        long votosSim = votoRepository.countByAgendaIdAndVoto(pauta.getId(), VotoEnum.SIM);
+        long votosNao = votoRepository.countByAgendaIdAndVoto(pauta.getId(), VotoEnum.NAO);
         long totalVotos = votosSim + votosNao;
 
         return ResultadoResponse.builder()
-                .pautaId(pauta.getUuid())
-                .tituloPauta(pauta.getTitulo())
-                .totalSim(votosSim)
-                .totalNao(votosNao)
+                .agendaId(pauta.getUuid())
+                .agendaTitle(pauta.getTitle())
+                .totalYes(votosSim)
+                .totalNo(votosNao)
                 .totalVotos(totalVotos)
                 .resultado(resultadoCalculator.calcular(votosSim, votosNao))
                 .build();
     }
 
     @Override
-    public Pauta buscarPorUuid(String uuid) {
+    public Pauta findByUuid(String uuid) {
         return pautaRepository.findByUuid(uuid)
-                .orElseThrow(() -> new NotFoundException("Pauta não encontrada: " + uuid));
+                .orElseThrow(() -> new NotFoundException("Agenda not found: " + uuid));
     }
 }

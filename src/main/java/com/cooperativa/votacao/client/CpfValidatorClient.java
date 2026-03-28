@@ -6,10 +6,10 @@ import com.cooperativa.votacao.exception.InvalidCpfException;
 import org.springframework.stereotype.Component;
 
 /**
- * Implementação fake que simula um serviço externo de validação de CPF.
- * Valida formato e dígitos verificadores conforme regra da Receita Federal.
- * Em produção, basta criar outra implementação de CpfValidationStrategy
- * e marcá-la como @Primary ou ativá-la via @Profile.
+ * Fake implementation that simulates an external CPF validation service.
+ * Validates format and check digits according to Receita Federal rules.
+ * In production, create another CpfValidationStrategy implementation
+ * and mark it as @Primary or activate it via @Profile.
  */
 @Component
 public class CpfValidatorClient implements CpfValidationStrategy {
@@ -17,7 +17,7 @@ public class CpfValidatorClient implements CpfValidationStrategy {
     @Override
     public CpfValidationResponse validarCpf(String cpf) {
         if (cpf == null || !isValid(cpf)) {
-            throw new InvalidCpfException("CPF inválido: " + cpf);
+            throw new InvalidCpfException("Invalid CPF: " + cpf);
         }
 
         return CpfValidationResponse.builder()

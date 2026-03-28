@@ -26,28 +26,28 @@ public class VotoServiceImpl implements VotoService {
 
     @Override
     @Transactional
-    public VotoResponse votar(String pautaUuid, VotoRequest request) {
-        Pauta pauta = pautaService.buscarPorUuid(pautaUuid);
+    public VotoResponse votar(String agendaUuid, VotoRequest request) {
+        Pauta pauta = pautaService.findByUuid(agendaUuid);
 
-        SessaoVotacao sessao = sessaoVotacaoService.buscarPorPautaId(pauta.getId());
-        if (!sessao.isAberta()) {
-            throw new BusinessException("A sessão de votação não está aberta");
+        SessaoVotacao sessao = sessaoVotacaoService.findByAgendaId(pauta.getId());
+        if (!sessao.isOpen()) {
+            throw new BusinessException("Voting session is not open");
         }
 
-        if (votoRepository.existsByPautaIdAndAssociadoId(pauta.getId(), request.getAssociadoId())) {
-            throw new BusinessException("Associado já votou nesta pauta");
+        if (votoRepository.existsByAgendaIdAndAssociateId(pauta.getId(), request.getAssociateId())) {
+            throw new BusinessException("Associate has already voted on this agenda");
         }
 
         if (request.getCpf() != null && !request.getCpf().isBlank()) {
             CpfValidationResponse cpfValidation = cpfValidationStrategy.validarCpf(request.getCpf());
             if (cpfValidation.getStatus() == StatusCpf.UNABLE_TO_VOTE) {
-                throw new BusinessException("Associado não está habilitado para votar (CPF: UNABLE_TO_VOTE)");
+                throw new BusinessException("Associate is not eligible to vote (CPF: UNABLE_TO_VOTE)");
             }
         }
 
         Voto voto = Voto.builder()
-                .pauta(pauta)
-                .associadoId(request.getAssociadoId())
+                .agenda(pauta)
+                .associateId(request.getAssociateId())
                 .cpf(request.getCpf())
                 .voto(request.getVoto())
                 .build();

@@ -39,20 +39,20 @@ public class GlobalExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .toList();
 
-        ErrorResponse error = buildError(HttpStatus.BAD_REQUEST, "Erro de validação", request);
+        ErrorResponse error = buildError(HttpStatus.BAD_REQUEST, "Validation error", request);
         error.setErrors(fieldErrors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
-        ErrorResponse error = buildError(HttpStatus.CONFLICT, "Associado já votou nesta pauta", request);
+        ErrorResponse error = buildError(HttpStatus.CONFLICT, "Associate has already voted on this agenda", request);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex, HttpServletRequest request) {
-        ErrorResponse error = buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor", request);
+        ErrorResponse error = buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", request);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 

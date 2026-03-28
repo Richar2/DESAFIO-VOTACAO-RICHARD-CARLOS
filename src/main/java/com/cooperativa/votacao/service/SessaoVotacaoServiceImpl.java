@@ -17,29 +17,29 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SessaoVotacaoServiceImpl implements SessaoVotacaoService {
 
-    private static final long DURACAO_PADRAO_SEGUNDOS = 60;
+    private static final long DEFAULT_DURATION_SECONDS = 60;
 
     private final SessaoVotacaoRepository sessaoVotacaoRepository;
     private final PautaService pautaService;
 
     @Override
     @Transactional
-    public SessaoResponse abrir(String pautaUuid, SessaoRequest request) {
-        Pauta pauta = pautaService.buscarPorUuid(pautaUuid);
+    public SessaoResponse abrir(String agendaUuid, SessaoRequest request) {
+        Pauta pauta = pautaService.findByUuid(agendaUuid);
 
-        sessaoVotacaoRepository.findByPautaId(pauta.getId()).ifPresent(s -> {
-            throw new BusinessException("Já existe uma sessão de votação para esta pauta");
+        sessaoVotacaoRepository.findByAgendaId(pauta.getId()).ifPresent(s -> {
+            throw new BusinessException("A voting session already exists for this agenda");
         });
 
-        long duracaoSegundos = (request != null && request.getDuracaoSegundos() != null && request.getDuracaoSegundos() > 0)
-                ? request.getDuracaoSegundos()
-                : DURACAO_PADRAO_SEGUNDOS;
+        long durationSeconds = (request != null && request.getDurationSeconds() != null && request.getDurationSeconds() > 0)
+                ? request.getDurationSeconds()
+                : DEFAULT_DURATION_SECONDS;
 
-        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
         SessaoVotacao sessao = SessaoVotacao.builder()
-                .pauta(pauta)
-                .inicioEm(agora)
-                .fimEm(agora.plusSeconds(duracaoSegundos))
+                .agenda(pauta)
+                .startedAt(now)
+                .endedAt(now.plusSeconds(durationSeconds))
                 .build();
 
         sessao = sessaoVotacaoRepository.save(sessao);
@@ -47,8 +47,8 @@ public class SessaoVotacaoServiceImpl implements SessaoVotacaoService {
     }
 
     @Override
-    public SessaoVotacao buscarPorPautaId(Long pautaId) {
-        return sessaoVotacaoRepository.findByPautaId(pautaId)
-                .orElseThrow(() -> new BusinessException("Nenhuma sessão de votação aberta para esta pauta"));
+    public SessaoVotacao findByAgendaId(Long agendaId) {
+        return sessaoVotacaoRepository.findByAgendaId(agendaId)
+                .orElseThrow(() -> new BusinessException("No voting session found for this agenda"));
     }
 }

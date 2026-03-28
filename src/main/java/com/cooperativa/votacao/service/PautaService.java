@@ -9,7 +9,7 @@ public interface PautaService {
 
     PautaResponse criar(PautaRequest request);
 
-    ResultadoResponse obterResultado(String pautaUuid);
+    ResultadoResponse obterResultado(String agendaUuid);
 
-    Pauta buscarPorUuid(String uuid);
+    Pauta findByUuid(String uuid);
 }
