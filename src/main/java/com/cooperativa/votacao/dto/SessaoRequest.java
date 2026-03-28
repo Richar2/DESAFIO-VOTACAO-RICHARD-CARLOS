@@ -8,5 +8,5 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class SessaoRequest {
-    private Long duracaoMinutos;
+    private Long duracaoSegundos;
 }

@@ -12,8 +12,10 @@ import java.util.List;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
-    private int status;
-    private String message;
     private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
     private List<String> errors;
 }

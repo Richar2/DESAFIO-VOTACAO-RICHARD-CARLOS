@@ -1,5 +1,6 @@
 package com.cooperativa.votacao.dto;
 
+import com.cooperativa.votacao.enums.SituacaoResultado;
 import lombok.*;
 
 @Getter
@@ -10,8 +11,8 @@ import lombok.*;
 public class ResultadoResponse {
     private Long pautaId;
     private String tituloPauta;
-    private long totalVotosSim;
-    private long totalVotosNao;
+    private long totalSim;
+    private long totalNao;
     private long totalVotos;
-    private String resultado;
+    private SituacaoResultado resultado;
 }
