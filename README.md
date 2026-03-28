@@ -324,11 +324,45 @@ src/main/java/com/cooperativa/votacao/
 | MaioriaSimplesCalculatorStrategyTest | 4 | Aprovada, reprovada, empate, sem votos |
 | VotacaoApplicationTests | 1 | Context load |
 
-## Melhorias futuras
+## Diagrama do Banco de Dados (ERD)
 
-- Implementacao real do client de CPF via HTTP (substituir o fake)
-- Mensageria com RabbitMQ/Kafka para notificar resultado ao encerrar sessao
-- Cache com Redis para resultados ja encerrados
-- Paginacao no endpoint de listagem de pautas
-- Autenticacao via JWT para identificar associados
-- Scheduler para fechar sessoes expiradas automaticamente
+```
+┌──────────────────────────┐
+│          pauta            │
+├──────────────────────────┤
+│ id          BIGINT    PK │
+│ uuid        VARCHAR   UK │
+│ titulo      VARCHAR  NOT NULL │
+│ descricao   TEXT         │
+│ created_at  TIMESTAMP    │
+└──────────┬───────────────┘
+           │ 1
+           │
+           │        1
+┌──────────┴───────────────┐       ┌──────────────────────────┐
+│     sessao_votacao        │       │          voto             │
+├──────────────────────────┤       ├──────────────────────────┤
+│ id          BIGINT    PK │       │ id           BIGINT   PK │
+│ uuid        VARCHAR   UK │       │ uuid         VARCHAR  UK │
+│ pauta_id    BIGINT FK UK │       │ pauta_id     BIGINT  FK │
+│ inicio_em   TIMESTAMP    │       │ associado_id VARCHAR     │
+│ fim_em      TIMESTAMP    │       │ cpf          VARCHAR     │
+└──────────────────────────┘       │ voto         VARCHAR(3)  │
+                                   │ criado_em    TIMESTAMP   │
+           │                       ├──────────────────────────┤
+           │ 1                     │ UK (pauta_id, associado_id) │
+           │                       └──────────────────────────┘
+           │ *                                │ *
+           └──────────────────────────────────┘
+
+Relacionamentos:
+  pauta 1 ──── 1 sessao_votacao   (uma sessao por pauta)
+  pauta 1 ──── * voto             (muitos votos por pauta)
+
+Indices:
+  idx_voto_pauta_id    → voto(pauta_id)
+  idx_sessao_pauta_id  → sessao_votacao(pauta_id)
+  idx_pauta_uuid       → pauta(uuid)
+  idx_sessao_uuid      → sessao_votacao(uuid)
+  idx_voto_uuid        → voto(uuid)
+```
