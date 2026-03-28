@@ -1,37 +1,44 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
     container_name: votacao-db
     environment:
-      POSTGRES_DB: votacao
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME:-votacao}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d votacao"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - votacao-net
 
   app:
     build: .
     container_name: votacao-app
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: votacao
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_NAME: ${DB_NAME:-votacao}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
     depends_on:
       postgres:
         condition: service_healthy
+    restart: on-failure
+    networks:
+      - votacao-net
 
 volumes:
   postgres_data:
+
+networks:
+  votacao-net:
+    driver: bridge
