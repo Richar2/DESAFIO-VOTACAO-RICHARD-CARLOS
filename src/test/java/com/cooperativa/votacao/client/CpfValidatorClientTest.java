@@ -12,11 +12,19 @@ class CpfValidatorClientTest {
     private final CpfValidatorClient client = new CpfValidatorClient();
 
     @Test
-    void deveRetornarStatusParaCpfValido() {
-        CpfValidationResponse response = client.validarCpf("12345678909");
+    void deveRetornarAbleToVoteParaCpfValido() {
+        // CPF válido: 529.982.247-25
+        CpfValidationResponse response = client.validarCpf("52998224725");
 
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isIn(StatusCpf.ABLE_TO_VOTE, StatusCpf.UNABLE_TO_VOTE);
+        assertThat(response.getStatus()).isEqualTo(StatusCpf.ABLE_TO_VOTE);
+    }
+
+    @Test
+    void deveAceitarCpfComMascara() {
+        CpfValidationResponse response = client.validarCpf("529.982.247-25");
+
+        assertThat(response.getStatus()).isEqualTo(StatusCpf.ABLE_TO_VOTE);
     }
 
     @Test
@@ -27,14 +35,27 @@ class CpfValidatorClientTest {
     }
 
     @Test
-    void deveLancarExcecaoParaCpfComFormatoInvalido() {
+    void deveLancarExcecaoParaCpfComDigitosVerificadoresInvalidos() {
+        // 529.982.247-00 tem dígitos verificadores errados
+        assertThatThrownBy(() -> client.validarCpf("52998224700"))
+                .isInstanceOf(InvalidCpfException.class);
+    }
+
+    @Test
+    void deveLancarExcecaoParaCpfComTodosDigitosIguais() {
+        assertThatThrownBy(() -> client.validarCpf("11111111111"))
+                .isInstanceOf(InvalidCpfException.class);
+    }
+
+    @Test
+    void deveLancarExcecaoParaCpfComMenosDigitos() {
         assertThatThrownBy(() -> client.validarCpf("123"))
                 .isInstanceOf(InvalidCpfException.class);
     }
 
     @Test
     void deveLancarExcecaoParaCpfComLetras() {
-        assertThatThrownBy(() -> client.validarCpf("1234567890a"))
+        assertThatThrownBy(() -> client.validarCpf("5299822472a"))
                 .isInstanceOf(InvalidCpfException.class);
     }
 }
