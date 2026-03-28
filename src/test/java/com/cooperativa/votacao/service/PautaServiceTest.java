@@ -41,15 +41,15 @@ class PautaServiceTest {
     @Test
     void deveCriarPautaComSucesso() {
         PautaRequest request = PautaRequest.builder()
-                .titulo("Pauta Teste")
-                .descricao("Descrição teste")
+                .title("Pauta Teste")
+                .description("Descrição teste")
                 .build();
 
         Pauta pauta = Pauta.builder()
                 .id(1L)
                 .uuid("abc-123")
-                .titulo("Pauta Teste")
-                .descricao("Descrição teste")
+                .title("Pauta Teste")
+                .description("Descrição teste")
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -58,22 +58,22 @@ class PautaServiceTest {
         PautaResponse response = pautaService.criar(request);
 
         assertThat(response.getId()).isEqualTo("abc-123");
-        assertThat(response.getTitulo()).isEqualTo("Pauta Teste");
+        assertThat(response.getTitle()).isEqualTo("Pauta Teste");
         verify(pautaRepository).save(any(Pauta.class));
     }
 
     @Test
     void deveRetornarResultadoAprovada() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").titulo("Pauta Teste").build();
+        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").title("Pauta Teste").build();
         when(pautaRepository.findByUuid("abc-123")).thenReturn(Optional.of(pauta));
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(5L);
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(3L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(5L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(3L);
         when(resultadoCalculator.calcular(5L, 3L)).thenReturn(SituacaoResultado.APROVADA);
 
         ResultadoResponse resultado = pautaService.obterResultado("abc-123");
 
-        assertThat(resultado.getTotalSim()).isEqualTo(5);
-        assertThat(resultado.getTotalNao()).isEqualTo(3);
+        assertThat(resultado.getTotalYes()).isEqualTo(5);
+        assertThat(resultado.getTotalNo()).isEqualTo(3);
         assertThat(resultado.getTotalVotos()).isEqualTo(8);
         assertThat(resultado.getResultado()).isEqualTo(SituacaoResultado.APROVADA);
         verify(resultadoCalculator).calcular(5L, 3L);
@@ -81,10 +81,10 @@ class PautaServiceTest {
 
     @Test
     void deveRetornarResultadoReprovada() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").titulo("Pauta Teste").build();
+        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").title("Pauta Teste").build();
         when(pautaRepository.findByUuid("abc-123")).thenReturn(Optional.of(pauta));
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(2L);
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(7L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(2L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(7L);
         when(resultadoCalculator.calcular(2L, 7L)).thenReturn(SituacaoResultado.REPROVADA);
 
         ResultadoResponse resultado = pautaService.obterResultado("abc-123");
@@ -94,10 +94,10 @@ class PautaServiceTest {
 
     @Test
     void deveRetornarResultadoEmpate() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").titulo("Pauta Teste").build();
+        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").title("Pauta Teste").build();
         when(pautaRepository.findByUuid("abc-123")).thenReturn(Optional.of(pauta));
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(3L);
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(3L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(3L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(3L);
         when(resultadoCalculator.calcular(3L, 3L)).thenReturn(SituacaoResultado.EMPATE);
 
         ResultadoResponse resultado = pautaService.obterResultado("abc-123");
@@ -107,10 +107,10 @@ class PautaServiceTest {
 
     @Test
     void deveRetornarEmpateQuandoSemVotos() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").titulo("Pauta Teste").build();
+        Pauta pauta = Pauta.builder().id(1L).uuid("abc-123").title("Pauta Teste").build();
         when(pautaRepository.findByUuid("abc-123")).thenReturn(Optional.of(pauta));
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(0L);
-        when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(0L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(0L);
+        when(votoRepository.countByAgendaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(0L);
         when(resultadoCalculator.calcular(0L, 0L)).thenReturn(SituacaoResultado.EMPATE);
 
         ResultadoResponse resultado = pautaService.obterResultado("abc-123");
@@ -125,6 +125,6 @@ class PautaServiceTest {
 
         assertThatThrownBy(() -> pautaService.obterResultado("inexistente"))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Pauta não encontrada");
+                .hasMessageContaining("Agenda not found");
     }
 }

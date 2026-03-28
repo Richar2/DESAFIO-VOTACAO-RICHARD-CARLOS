@@ -27,15 +27,15 @@ class PautaControllerTest {
     @Test
     void deveCriarPauta() throws Exception {
         PautaRequest request = PautaRequest.builder()
-                .titulo("Nova Pauta")
-                .descricao("Descrição da pauta")
+                .title("Nova Pauta")
+                .description("Descrição da pauta")
                 .build();
 
-        mockMvc.perform(post("/api/v1/pautas")
+        mockMvc.perform(post("/api/v1/agendas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.titulo").value("Nova Pauta"))
+                .andExpect(jsonPath("$.title").value("Nova Pauta"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.id").isString());
     }
@@ -43,10 +43,10 @@ class PautaControllerTest {
     @Test
     void deveRetornarBadRequestQuandoTituloVazio() throws Exception {
         PautaRequest request = PautaRequest.builder()
-                .titulo("")
+                .title("")
                 .build();
 
-        mockMvc.perform(post("/api/v1/pautas")
+        mockMvc.perform(post("/api/v1/agendas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -54,86 +54,86 @@ class PautaControllerTest {
 
     @Test
     void deveAbrirSessaoComDuracaoDefault() throws Exception {
-        String pautaId = criarPauta("Pauta Sessao Default");
+        String agendaId = criarPauta("Pauta Sessao Default");
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.pautaId").value(pautaId))
-                .andExpect(jsonPath("$.fimEm").isNotEmpty());
+                .andExpect(jsonPath("$.agendaId").value(agendaId))
+                .andExpect(jsonPath("$.endedAt").isNotEmpty());
     }
 
     @Test
     void deveAbrirSessaoComDuracaoInformada() throws Exception {
-        String pautaId = criarPauta("Pauta Sessao Custom");
+        String agendaId = criarPauta("Pauta Sessao Custom");
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"duracaoSegundos\": 120}"))
+                        .content("{\"durationSeconds\": 120}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.pautaId").value(pautaId));
+                .andExpect(jsonPath("$.agendaId").value(agendaId));
     }
 
     @Test
     void deveAbrirSessaoEVotar() throws Exception {
-        String pautaId = criarPauta("Pauta Votação");
+        String agendaId = criarPauta("Pauta Votação");
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"duracaoSegundos\": 600}"))
+                        .content("{\"durationSeconds\": 600}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"associadoId\": \"assoc-1\", \"voto\": \"SIM\"}"))
+                        .content("{\"associateId\": \"assoc-1\", \"voto\": \"SIM\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.voto").value("SIM"));
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"associadoId\": \"assoc-2\", \"voto\": \"NAO\"}"))
+                        .content("{\"associateId\": \"assoc-2\", \"voto\": \"NAO\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/pautas/" + pautaId + "/resultado"))
+        mockMvc.perform(get("/api/v1/agendas/" + agendaId + "/result"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalSim").value(1))
-                .andExpect(jsonPath("$.totalNao").value(1))
+                .andExpect(jsonPath("$.totalYes").value(1))
+                .andExpect(jsonPath("$.totalNo").value(1))
                 .andExpect(jsonPath("$.totalVotos").value(2))
                 .andExpect(jsonPath("$.resultado").value("EMPATE"));
     }
 
     @Test
     void deveImpedirVotoDuplicado() throws Exception {
-        String pautaId = criarPauta("Pauta Voto Duplicado");
+        String agendaId = criarPauta("Pauta Voto Duplicado");
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"duracaoSegundos\": 600}"))
+                        .content("{\"durationSeconds\": 600}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"associadoId\": \"assoc-1\", \"voto\": \"SIM\"}"))
+                        .content("{\"associateId\": \"assoc-1\", \"voto\": \"SIM\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
+        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"associadoId\": \"assoc-1\", \"voto\": \"NAO\"}"))
+                        .content("{\"associateId\": \"assoc-1\", \"voto\": \"NAO\"}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
     void deveRetornar404ParaPautaInexistente() throws Exception {
-        mockMvc.perform(get("/api/v1/pautas/uuid-inexistente/resultado"))
+        mockMvc.perform(get("/api/v1/agendas/uuid-inexistente/result"))
                 .andExpect(status().isNotFound());
     }
 
-    private String criarPauta(String titulo) throws Exception {
+    private String criarPauta(String title) throws Exception {
         PautaRequest request = PautaRequest.builder()
-                .titulo(titulo)
+                .title(title)
                 .build();
 
-        String response = mockMvc.perform(post("/api/v1/pautas")
+        String response = mockMvc.perform(post("/api/v1/agendas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

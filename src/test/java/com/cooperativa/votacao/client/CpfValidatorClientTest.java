@@ -31,7 +31,7 @@ class CpfValidatorClientTest {
     void deveLancarExcecaoParaCpfNulo() {
         assertThatThrownBy(() -> client.validarCpf(null))
                 .isInstanceOf(InvalidCpfException.class)
-                .hasMessageContaining("CPF inválido");
+                .hasMessageContaining("Invalid CPF");
     }
 
     @Test

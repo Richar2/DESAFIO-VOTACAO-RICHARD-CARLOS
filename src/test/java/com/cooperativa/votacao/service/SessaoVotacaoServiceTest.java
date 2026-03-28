@@ -33,57 +33,57 @@ class SessaoVotacaoServiceTest {
 
     @Test
     void deveAbrirSessaoComDuracaoPadrao() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
-        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
-        when(sessaoVotacaoRepository.findByPautaId(1L)).thenReturn(Optional.empty());
+        Pauta pauta = Pauta.builder().id(1L).uuid("agenda-uuid").title("Teste").build();
+        when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
+        when(sessaoVotacaoRepository.findByAgendaId(1L)).thenReturn(Optional.empty());
 
         SessaoVotacao sessaoSalva = SessaoVotacao.builder()
                 .id(1L)
-                .uuid("sessao-uuid")
-                .pauta(pauta)
-                .inicioEm(LocalDateTime.now())
-                .fimEm(LocalDateTime.now().plusSeconds(60))
+                .uuid("session-uuid")
+                .agenda(pauta)
+                .startedAt(LocalDateTime.now())
+                .endedAt(LocalDateTime.now().plusSeconds(60))
                 .build();
         when(sessaoVotacaoRepository.save(any(SessaoVotacao.class))).thenReturn(sessaoSalva);
 
-        SessaoResponse response = sessaoVotacaoService.abrir("pauta-uuid", null);
+        SessaoResponse response = sessaoVotacaoService.abrir("agenda-uuid", null);
 
-        assertThat(response.getId()).isEqualTo("sessao-uuid");
-        assertThat(response.getPautaId()).isEqualTo("pauta-uuid");
+        assertThat(response.getId()).isEqualTo("session-uuid");
+        assertThat(response.getAgendaId()).isEqualTo("agenda-uuid");
         verify(sessaoVotacaoRepository).save(any(SessaoVotacao.class));
     }
 
     @Test
     void deveAbrirSessaoComDuracaoCustomizada() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
-        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
-        when(sessaoVotacaoRepository.findByPautaId(1L)).thenReturn(Optional.empty());
+        Pauta pauta = Pauta.builder().id(1L).uuid("agenda-uuid").title("Teste").build();
+        when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
+        when(sessaoVotacaoRepository.findByAgendaId(1L)).thenReturn(Optional.empty());
 
         SessaoVotacao sessaoSalva = SessaoVotacao.builder()
                 .id(1L)
-                .uuid("sessao-uuid")
-                .pauta(pauta)
-                .inicioEm(LocalDateTime.now())
-                .fimEm(LocalDateTime.now().plusSeconds(120))
+                .uuid("session-uuid")
+                .agenda(pauta)
+                .startedAt(LocalDateTime.now())
+                .endedAt(LocalDateTime.now().plusSeconds(120))
                 .build();
         when(sessaoVotacaoRepository.save(any(SessaoVotacao.class))).thenReturn(sessaoSalva);
 
-        SessaoRequest request = SessaoRequest.builder().duracaoSegundos(120L).build();
-        SessaoResponse response = sessaoVotacaoService.abrir("pauta-uuid", request);
+        SessaoRequest request = SessaoRequest.builder().durationSeconds(120L).build();
+        SessaoResponse response = sessaoVotacaoService.abrir("agenda-uuid", request);
 
-        assertThat(response.getId()).isEqualTo("sessao-uuid");
+        assertThat(response.getId()).isEqualTo("session-uuid");
     }
 
     @Test
     void deveLancarExcecaoQuandoSessaoJaExiste() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
-        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
+        Pauta pauta = Pauta.builder().id(1L).uuid("agenda-uuid").title("Teste").build();
+        when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
 
-        SessaoVotacao sessaoExistente = SessaoVotacao.builder().id(1L).pauta(pauta).build();
-        when(sessaoVotacaoRepository.findByPautaId(1L)).thenReturn(Optional.of(sessaoExistente));
+        SessaoVotacao sessaoExistente = SessaoVotacao.builder().id(1L).agenda(pauta).build();
+        when(sessaoVotacaoRepository.findByAgendaId(1L)).thenReturn(Optional.of(sessaoExistente));
 
-        assertThatThrownBy(() -> sessaoVotacaoService.abrir("pauta-uuid", null))
+        assertThatThrownBy(() -> sessaoVotacaoService.abrir("agenda-uuid", null))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Já existe uma sessão");
+                .hasMessageContaining("A voting session already exists");
     }
 }
