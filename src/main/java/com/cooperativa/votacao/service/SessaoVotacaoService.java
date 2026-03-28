@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SessaoVotacaoService {
 
-    private static final long DURACAO_PADRAO_MINUTOS = 1;
+    private static final long DURACAO_PADRAO_SEGUNDOS = 60;
 
     private final SessaoVotacaoRepository sessaoVotacaoRepository;
     private final PautaService pautaService;
@@ -30,15 +30,15 @@ public class SessaoVotacaoService {
             throw new BusinessException("Já existe uma sessão de votação para esta pauta");
         });
 
-        long duracao = (request != null && request.getDuracaoMinutos() != null && request.getDuracaoMinutos() > 0)
-                ? request.getDuracaoMinutos()
-                : DURACAO_PADRAO_MINUTOS;
+        long duracaoSegundos = (request != null && request.getDuracaoSegundos() != null && request.getDuracaoSegundos() > 0)
+                ? request.getDuracaoSegundos()
+                : DURACAO_PADRAO_SEGUNDOS;
 
         LocalDateTime agora = LocalDateTime.now();
         SessaoVotacao sessao = SessaoVotacao.builder()
                 .pauta(pauta)
                 .inicioEm(agora)
-                .fimEm(agora.plusMinutes(duracao))
+                .fimEm(agora.plusSeconds(duracaoSegundos))
                 .build();
 
         sessao = sessaoVotacaoRepository.save(sessao);
