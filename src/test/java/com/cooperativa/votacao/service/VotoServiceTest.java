@@ -1,6 +1,6 @@
 package com.cooperativa.votacao.service;
 
-import com.cooperativa.votacao.client.CpfValidatorClient;
+import com.cooperativa.votacao.client.CpfValidationStrategy;
 import com.cooperativa.votacao.dto.VotoRequest;
 import com.cooperativa.votacao.dto.VotoResponse;
 import com.cooperativa.votacao.entity.Pauta;
@@ -34,7 +34,7 @@ class VotoServiceTest {
     private SessaoVotacaoService sessaoVotacaoService;
 
     @Mock
-    private CpfValidatorClient cpfValidatorClient;
+    private CpfValidationStrategy cpfValidationStrategy;
 
     @InjectMocks
     private VotoService votoService;

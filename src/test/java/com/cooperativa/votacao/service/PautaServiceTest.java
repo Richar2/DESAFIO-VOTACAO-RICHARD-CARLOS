@@ -32,6 +32,9 @@ class PautaServiceTest {
     @Mock
     private VotoRepository votoRepository;
 
+    @Mock
+    private ResultadoCalculatorStrategy resultadoCalculator;
+
     @InjectMocks
     private PautaService pautaService;
 
@@ -64,6 +67,7 @@ class PautaServiceTest {
         when(pautaRepository.findById(1L)).thenReturn(Optional.of(pauta));
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(5L);
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(3L);
+        when(resultadoCalculator.calcular(5L, 3L)).thenReturn(SituacaoResultado.APROVADA);
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
@@ -71,6 +75,7 @@ class PautaServiceTest {
         assertThat(resultado.getTotalNao()).isEqualTo(3);
         assertThat(resultado.getTotalVotos()).isEqualTo(8);
         assertThat(resultado.getResultado()).isEqualTo(SituacaoResultado.APROVADA);
+        verify(resultadoCalculator).calcular(5L, 3L);
     }
 
     @Test
@@ -79,6 +84,7 @@ class PautaServiceTest {
         when(pautaRepository.findById(1L)).thenReturn(Optional.of(pauta));
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(2L);
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(7L);
+        when(resultadoCalculator.calcular(2L, 7L)).thenReturn(SituacaoResultado.REPROVADA);
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
@@ -91,6 +97,7 @@ class PautaServiceTest {
         when(pautaRepository.findById(1L)).thenReturn(Optional.of(pauta));
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(3L);
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(3L);
+        when(resultadoCalculator.calcular(3L, 3L)).thenReturn(SituacaoResultado.EMPATE);
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
@@ -103,6 +110,7 @@ class PautaServiceTest {
         when(pautaRepository.findById(1L)).thenReturn(Optional.of(pauta));
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(0L);
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.NAO))).thenReturn(0L);
+        when(resultadoCalculator.calcular(0L, 0L)).thenReturn(SituacaoResultado.EMPATE);
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
