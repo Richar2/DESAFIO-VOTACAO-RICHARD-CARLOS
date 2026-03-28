@@ -33,33 +33,35 @@ class SessaoVotacaoServiceTest {
 
     @Test
     void deveAbrirSessaoComDuracaoPadrao() {
-        Pauta pauta = Pauta.builder().id(1L).titulo("Teste").build();
-        when(pautaService.buscarPorId(1L)).thenReturn(pauta);
+        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
+        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
         when(sessaoVotacaoRepository.findByPautaId(1L)).thenReturn(Optional.empty());
 
         SessaoVotacao sessaoSalva = SessaoVotacao.builder()
                 .id(1L)
+                .uuid("sessao-uuid")
                 .pauta(pauta)
                 .inicioEm(LocalDateTime.now())
                 .fimEm(LocalDateTime.now().plusSeconds(60))
                 .build();
         when(sessaoVotacaoRepository.save(any(SessaoVotacao.class))).thenReturn(sessaoSalva);
 
-        SessaoResponse response = sessaoVotacaoService.abrir(1L, null);
+        SessaoResponse response = sessaoVotacaoService.abrir("pauta-uuid", null);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getPautaId()).isEqualTo(1L);
+        assertThat(response.getId()).isEqualTo("sessao-uuid");
+        assertThat(response.getPautaId()).isEqualTo("pauta-uuid");
         verify(sessaoVotacaoRepository).save(any(SessaoVotacao.class));
     }
 
     @Test
     void deveAbrirSessaoComDuracaoCustomizada() {
-        Pauta pauta = Pauta.builder().id(1L).titulo("Teste").build();
-        when(pautaService.buscarPorId(1L)).thenReturn(pauta);
+        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
+        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
         when(sessaoVotacaoRepository.findByPautaId(1L)).thenReturn(Optional.empty());
 
         SessaoVotacao sessaoSalva = SessaoVotacao.builder()
                 .id(1L)
+                .uuid("sessao-uuid")
                 .pauta(pauta)
                 .inicioEm(LocalDateTime.now())
                 .fimEm(LocalDateTime.now().plusSeconds(120))
@@ -67,20 +69,20 @@ class SessaoVotacaoServiceTest {
         when(sessaoVotacaoRepository.save(any(SessaoVotacao.class))).thenReturn(sessaoSalva);
 
         SessaoRequest request = SessaoRequest.builder().duracaoSegundos(120L).build();
-        SessaoResponse response = sessaoVotacaoService.abrir(1L, request);
+        SessaoResponse response = sessaoVotacaoService.abrir("pauta-uuid", request);
 
-        assertThat(response.getId()).isEqualTo(1L);
+        assertThat(response.getId()).isEqualTo("sessao-uuid");
     }
 
     @Test
     void deveLancarExcecaoQuandoSessaoJaExiste() {
-        Pauta pauta = Pauta.builder().id(1L).titulo("Teste").build();
-        when(pautaService.buscarPorId(1L)).thenReturn(pauta);
+        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
+        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
 
         SessaoVotacao sessaoExistente = SessaoVotacao.builder().id(1L).pauta(pauta).build();
         when(sessaoVotacaoRepository.findByPautaId(1L)).thenReturn(Optional.of(sessaoExistente));
 
-        assertThatThrownBy(() -> sessaoVotacaoService.abrir(1L, null))
+        assertThatThrownBy(() -> sessaoVotacaoService.abrir("pauta-uuid", null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Já existe uma sessão");
     }

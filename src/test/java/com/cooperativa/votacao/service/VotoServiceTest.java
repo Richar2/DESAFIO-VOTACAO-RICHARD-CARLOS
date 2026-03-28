@@ -41,7 +41,7 @@ class VotoServiceTest {
 
     @Test
     void deveRegistrarVotoComSucesso() {
-        Pauta pauta = Pauta.builder().id(1L).titulo("Teste").build();
+        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
         SessaoVotacao sessao = SessaoVotacao.builder()
                 .id(1L)
                 .pauta(pauta)
@@ -49,12 +49,13 @@ class VotoServiceTest {
                 .fimEm(LocalDateTime.now().plusMinutes(10))
                 .build();
 
-        when(pautaService.buscarPorId(1L)).thenReturn(pauta);
+        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
         when(sessaoVotacaoService.buscarPorPautaId(1L)).thenReturn(sessao);
         when(votoRepository.existsByPautaIdAndAssociadoId(1L, "assoc-1")).thenReturn(false);
 
         Voto votoSalvo = Voto.builder()
                 .id(1L)
+                .uuid("voto-uuid")
                 .pauta(pauta)
                 .associadoId("assoc-1")
                 .voto(VotoEnum.SIM)
@@ -67,16 +68,16 @@ class VotoServiceTest {
                 .voto(VotoEnum.SIM)
                 .build();
 
-        VotoResponse response = votoService.votar(1L, request);
+        VotoResponse response = votoService.votar("pauta-uuid", request);
 
-        assertThat(response.getId()).isEqualTo(1L);
+        assertThat(response.getId()).isEqualTo("voto-uuid");
         assertThat(response.getVoto()).isEqualTo(VotoEnum.SIM);
         verify(votoRepository).save(any(Voto.class));
     }
 
     @Test
     void deveLancarExcecaoQuandoSessaoFechada() {
-        Pauta pauta = Pauta.builder().id(1L).titulo("Teste").build();
+        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
         SessaoVotacao sessao = SessaoVotacao.builder()
                 .id(1L)
                 .pauta(pauta)
@@ -84,7 +85,7 @@ class VotoServiceTest {
                 .fimEm(LocalDateTime.now().minusMinutes(5))
                 .build();
 
-        when(pautaService.buscarPorId(1L)).thenReturn(pauta);
+        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
         when(sessaoVotacaoService.buscarPorPautaId(1L)).thenReturn(sessao);
 
         VotoRequest request = VotoRequest.builder()
@@ -92,14 +93,14 @@ class VotoServiceTest {
                 .voto(VotoEnum.SIM)
                 .build();
 
-        assertThatThrownBy(() -> votoService.votar(1L, request))
+        assertThatThrownBy(() -> votoService.votar("pauta-uuid", request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("sessão de votação não está aberta");
     }
 
     @Test
     void deveLancarExcecaoQuandoAssociadoJaVotou() {
-        Pauta pauta = Pauta.builder().id(1L).titulo("Teste").build();
+        Pauta pauta = Pauta.builder().id(1L).uuid("pauta-uuid").titulo("Teste").build();
         SessaoVotacao sessao = SessaoVotacao.builder()
                 .id(1L)
                 .pauta(pauta)
@@ -107,7 +108,7 @@ class VotoServiceTest {
                 .fimEm(LocalDateTime.now().plusMinutes(10))
                 .build();
 
-        when(pautaService.buscarPorId(1L)).thenReturn(pauta);
+        when(pautaService.buscarPorUuid("pauta-uuid")).thenReturn(pauta);
         when(sessaoVotacaoService.buscarPorPautaId(1L)).thenReturn(sessao);
         when(votoRepository.existsByPautaIdAndAssociadoId(1L, "assoc-1")).thenReturn(true);
 
@@ -116,7 +117,7 @@ class VotoServiceTest {
                 .voto(VotoEnum.NAO)
                 .build();
 
-        assertThatThrownBy(() -> votoService.votar(1L, request))
+        assertThatThrownBy(() -> votoService.votar("pauta-uuid", request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("já votou");
     }

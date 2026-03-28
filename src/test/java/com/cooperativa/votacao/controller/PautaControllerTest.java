@@ -36,7 +36,8 @@ class PautaControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.titulo").value("Nova Pauta"))
-                .andExpect(jsonPath("$.id").isNotEmpty());
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.id").isString());
     }
 
     @Test
@@ -53,9 +54,8 @@ class PautaControllerTest {
 
     @Test
     void deveAbrirSessaoComDuracaoDefault() throws Exception {
-        Long pautaId = criarPauta("Pauta Sessao Default");
+        String pautaId = criarPauta("Pauta Sessao Default");
 
-        // Abrir sessão sem informar duração (default = 60 segundos)
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
@@ -65,7 +65,7 @@ class PautaControllerTest {
 
     @Test
     void deveAbrirSessaoComDuracaoInformada() throws Exception {
-        Long pautaId = criarPauta("Pauta Sessao Custom");
+        String pautaId = criarPauta("Pauta Sessao Custom");
 
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -76,28 +76,24 @@ class PautaControllerTest {
 
     @Test
     void deveAbrirSessaoEVotar() throws Exception {
-        Long pautaId = criarPauta("Pauta Votação");
+        String pautaId = criarPauta("Pauta Votação");
 
-        // Abrir sessão com 600 segundos
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"duracaoSegundos\": 600}"))
                 .andExpect(status().isCreated());
 
-        // Votar SIM
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associadoId\": \"assoc-1\", \"voto\": \"SIM\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.voto").value("SIM"));
 
-        // Votar NAO
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associadoId\": \"assoc-2\", \"voto\": \"NAO\"}"))
                 .andExpect(status().isCreated());
 
-        // Resultado
         mockMvc.perform(get("/api/v1/pautas/" + pautaId + "/resultado"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalSim").value(1))
@@ -108,21 +104,18 @@ class PautaControllerTest {
 
     @Test
     void deveImpedirVotoDuplicado() throws Exception {
-        Long pautaId = criarPauta("Pauta Voto Duplicado");
+        String pautaId = criarPauta("Pauta Voto Duplicado");
 
-        // Abrir sessão
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/sessoes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"duracaoSegundos\": 600}"))
                 .andExpect(status().isCreated());
 
-        // Primeiro voto
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associadoId\": \"assoc-1\", \"voto\": \"SIM\"}"))
                 .andExpect(status().isCreated());
 
-        // Segundo voto do mesmo associado
         mockMvc.perform(post("/api/v1/pautas/" + pautaId + "/votos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associadoId\": \"assoc-1\", \"voto\": \"NAO\"}"))
@@ -131,11 +124,11 @@ class PautaControllerTest {
 
     @Test
     void deveRetornar404ParaPautaInexistente() throws Exception {
-        mockMvc.perform(get("/api/v1/pautas/999/resultado"))
+        mockMvc.perform(get("/api/v1/pautas/uuid-inexistente/resultado"))
                 .andExpect(status().isNotFound());
     }
 
-    private Long criarPauta(String titulo) throws Exception {
+    private String criarPauta(String titulo) throws Exception {
         PautaRequest request = PautaRequest.builder()
                 .titulo(titulo)
                 .build();
@@ -146,6 +139,6 @@ class PautaControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        return objectMapper.readTree(response).get("id").asLong();
+        return objectMapper.readTree(response).get("id").asText();
     }
 }
