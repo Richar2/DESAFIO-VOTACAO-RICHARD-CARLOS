@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "pauta")
+@Table(name = "agenda")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,10 +21,11 @@ public class Pauta {
     @Column(nullable = false, unique = true, updatable = false)
     private String uuid;
 
-    @Column(nullable = false)
-    private String titulo;
+    @Column(name = "title", nullable = false)
+    private String title;
 
-    private String descricao;
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

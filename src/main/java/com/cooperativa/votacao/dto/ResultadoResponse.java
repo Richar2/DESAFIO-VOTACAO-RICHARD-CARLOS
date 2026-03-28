@@ -9,10 +9,10 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ResultadoResponse {
-    private String pautaId;
-    private String tituloPauta;
-    private long totalSim;
-    private long totalNao;
+    private String agendaId;
+    private String agendaTitle;
+    private long totalYes;
+    private long totalNo;
     private long totalVotos;
     private SituacaoResultado resultado;
 }

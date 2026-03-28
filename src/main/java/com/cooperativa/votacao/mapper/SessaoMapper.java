@@ -10,9 +10,9 @@ public class SessaoMapper {
     public static SessaoResponse toResponse(SessaoVotacao sessao) {
         return SessaoResponse.builder()
                 .id(sessao.getUuid())
-                .pautaId(sessao.getPauta().getUuid())
-                .inicioEm(sessao.getInicioEm())
-                .fimEm(sessao.getFimEm())
+                .agendaId(sessao.getAgenda().getUuid())
+                .startedAt(sessao.getStartedAt())
+                .endedAt(sessao.getEndedAt())
                 .build();
     }
 }

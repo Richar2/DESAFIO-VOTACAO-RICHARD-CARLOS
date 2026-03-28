@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class SessaoResponse {
     private String id;
-    private String pautaId;
-    private LocalDateTime inicioEm;
-    private LocalDateTime fimEm;
+    private String agendaId;
+    private LocalDateTime startedAt;
+    private LocalDateTime endedAt;
 }

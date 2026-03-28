@@ -10,10 +10,10 @@ public class VotoMapper {
     public static VotoResponse toResponse(Voto voto) {
         return VotoResponse.builder()
                 .id(voto.getUuid())
-                .pautaId(voto.getPauta().getUuid())
-                .associadoId(voto.getAssociadoId())
+                .agendaId(voto.getAgenda().getUuid())
+                .associateId(voto.getAssociateId())
                 .voto(voto.getVoto())
-                .criadoEm(voto.getCriadoEm())
+                .createdAt(voto.getCreatedAt())
                 .build();
     }
 }

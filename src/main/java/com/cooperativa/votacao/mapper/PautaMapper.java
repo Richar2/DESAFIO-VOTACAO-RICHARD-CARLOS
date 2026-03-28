@@ -10,16 +10,16 @@ public class PautaMapper {
 
     public static Pauta toEntity(PautaRequest request) {
         return Pauta.builder()
-                .titulo(request.getTitulo())
-                .descricao(request.getDescricao())
+                .title(request.getTitle())
+                .description(request.getDescription())
                 .build();
     }
 
     public static PautaResponse toResponse(Pauta pauta) {
         return PautaResponse.builder()
                 .id(pauta.getUuid())
-                .titulo(pauta.getTitulo())
-                .descricao(pauta.getDescricao())
+                .title(pauta.getTitle())
+                .description(pauta.getDescription())
                 .createdAt(pauta.getCreatedAt())
                 .build();
     }

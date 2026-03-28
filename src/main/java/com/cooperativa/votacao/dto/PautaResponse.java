@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class PautaResponse {
     private String id;
-    private String titulo;
-    private String descricao;
+    private String title;
+    private String description;
     private LocalDateTime createdAt;
 }

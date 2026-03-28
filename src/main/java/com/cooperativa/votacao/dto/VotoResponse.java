@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Builder
 public class VotoResponse {
     private String id;
-    private String pautaId;
-    private String associadoId;
+    private String agendaId;
+    private String associateId;
     private VotoEnum voto;
-    private LocalDateTime criadoEm;
+    private LocalDateTime createdAt;
 }

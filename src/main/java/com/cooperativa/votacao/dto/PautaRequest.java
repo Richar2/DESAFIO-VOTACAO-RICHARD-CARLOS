@@ -11,10 +11,10 @@ import lombok.*;
 @Builder
 public class PautaRequest {
 
-    @NotBlank(message = "O título é obrigatório")
-    @Size(max = 255, message = "O título deve ter no máximo 255 caracteres")
-    private String titulo;
+    @NotBlank(message = "Title is required")
+    @Size(max = 255, message = "Title must have at most 255 characters")
+    private String title;
 
-    @Size(max = 1000, message = "A descrição deve ter no máximo 1000 caracteres")
-    private String descricao;
+    @Size(max = 1000, message = "Description must have at most 1000 characters")
+    private String description;
 }

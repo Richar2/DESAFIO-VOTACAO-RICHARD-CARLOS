@@ -8,8 +8,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface VotoRepository extends JpaRepository<Voto, Long> {
 
-    boolean existsByPautaIdAndAssociadoId(Long pautaId, String associadoId);
+    boolean existsByAgendaIdAndAssociateId(Long agendaId, String associateId);
 
-    @Query("SELECT COUNT(v) FROM Voto v WHERE v.pauta.id = :pautaId AND v.voto = :votoEnum")
-    long countByPautaIdAndVoto(@Param("pautaId") Long pautaId, @Param("votoEnum") VotoEnum votoEnum);
+    @Query("SELECT COUNT(v) FROM Voto v WHERE v.agenda.id = :agendaId AND v.voto = :votoEnum")
+    long countByAgendaIdAndVoto(@Param("agendaId") Long agendaId, @Param("votoEnum") VotoEnum votoEnum);
 }

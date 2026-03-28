@@ -13,13 +13,13 @@ import lombok.*;
 @Builder
 public class VotoRequest {
 
-    @NotBlank(message = "O ID do associado é obrigatório")
-    @Size(max = 255, message = "O ID do associado deve ter no máximo 255 caracteres")
-    private String associadoId;
+    @NotBlank(message = "Associate ID is required")
+    @Size(max = 255, message = "Associate ID must have at most 255 characters")
+    private String associateId;
 
-    @NotNull(message = "O voto é obrigatório (SIM ou NAO)")
+    @NotNull(message = "Vote is required (SIM or NAO)")
     private VotoEnum voto;
 
-    @Size(max = 14, message = "O CPF deve ter no máximo 14 caracteres")
+    @Size(max = 14, message = "CPF must have at most 14 characters")
     private String cpf;
 }

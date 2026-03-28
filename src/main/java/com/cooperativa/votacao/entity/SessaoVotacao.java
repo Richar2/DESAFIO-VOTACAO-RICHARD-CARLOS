@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "sessao_votacao")
+@Table(name = "voting_session")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,18 +22,19 @@ public class SessaoVotacao {
     private String uuid;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pauta_id", nullable = false, unique = true)
-    private Pauta pauta;
+    @JoinColumn(name = "agenda_id", nullable = false, unique = true,
+            foreignKey = @ForeignKey(name = "fk_session_agenda"))
+    private Pauta agenda;
 
-    @Column(name = "inicio_em", nullable = false)
-    private LocalDateTime inicioEm;
+    @Column(name = "started_at", nullable = false)
+    private LocalDateTime startedAt;
 
-    @Column(name = "fim_em", nullable = false)
-    private LocalDateTime fimEm;
+    @Column(name = "ended_at", nullable = false)
+    private LocalDateTime endedAt;
 
-    public boolean isAberta() {
-        LocalDateTime agora = LocalDateTime.now();
-        return !agora.isBefore(inicioEm) && agora.isBefore(fimEm);
+    public boolean isOpen() {
+        LocalDateTime now = LocalDateTime.now();
+        return !now.isBefore(startedAt) && now.isBefore(endedAt);
     }
 
     @PrePersist
