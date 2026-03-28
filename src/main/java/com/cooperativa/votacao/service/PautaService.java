@@ -4,7 +4,6 @@ import com.cooperativa.votacao.dto.PautaRequest;
 import com.cooperativa.votacao.dto.PautaResponse;
 import com.cooperativa.votacao.dto.ResultadoResponse;
 import com.cooperativa.votacao.entity.Pauta;
-import com.cooperativa.votacao.enums.SituacaoResultado;
 import com.cooperativa.votacao.enums.VotoEnum;
 import com.cooperativa.votacao.exception.NotFoundException;
 import com.cooperativa.votacao.mapper.PautaMapper;
@@ -20,6 +19,7 @@ public class PautaService {
 
     private final PautaRepository pautaRepository;
     private final VotoRepository votoRepository;
+    private final ResultadoCalculatorStrategy resultadoCalculator;
 
     @Transactional
     public PautaResponse criar(PautaRequest request) {
@@ -37,22 +37,13 @@ public class PautaService {
         long votosNao = votoRepository.countByPautaIdAndVoto(pautaId, VotoEnum.NAO);
         long totalVotos = votosSim + votosNao;
 
-        SituacaoResultado resultado;
-        if (votosSim > votosNao) {
-            resultado = SituacaoResultado.APROVADA;
-        } else if (votosNao > votosSim) {
-            resultado = SituacaoResultado.REPROVADA;
-        } else {
-            resultado = SituacaoResultado.EMPATE;
-        }
-
         return ResultadoResponse.builder()
                 .pautaId(pauta.getId())
                 .tituloPauta(pauta.getTitulo())
                 .totalSim(votosSim)
                 .totalNao(votosNao)
                 .totalVotos(totalVotos)
-                .resultado(resultado)
+                .resultado(resultadoCalculator.calcular(votosSim, votosNao))
                 .build();
     }
 
