@@ -4,6 +4,7 @@ import com.cooperativa.votacao.dto.PautaRequest;
 import com.cooperativa.votacao.dto.PautaResponse;
 import com.cooperativa.votacao.dto.ResultadoResponse;
 import com.cooperativa.votacao.entity.Pauta;
+import com.cooperativa.votacao.enums.SituacaoResultado;
 import com.cooperativa.votacao.enums.VotoEnum;
 import com.cooperativa.votacao.exception.NotFoundException;
 import com.cooperativa.votacao.repository.PautaRepository;
@@ -66,10 +67,10 @@ class PautaServiceTest {
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
-        assertThat(resultado.getTotalVotosSim()).isEqualTo(5);
-        assertThat(resultado.getTotalVotosNao()).isEqualTo(3);
+        assertThat(resultado.getTotalSim()).isEqualTo(5);
+        assertThat(resultado.getTotalNao()).isEqualTo(3);
         assertThat(resultado.getTotalVotos()).isEqualTo(8);
-        assertThat(resultado.getResultado()).isEqualTo("APROVADA");
+        assertThat(resultado.getResultado()).isEqualTo(SituacaoResultado.APROVADA);
     }
 
     @Test
@@ -81,7 +82,7 @@ class PautaServiceTest {
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
-        assertThat(resultado.getResultado()).isEqualTo("REPROVADA");
+        assertThat(resultado.getResultado()).isEqualTo(SituacaoResultado.REPROVADA);
     }
 
     @Test
@@ -93,11 +94,11 @@ class PautaServiceTest {
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
-        assertThat(resultado.getResultado()).isEqualTo("EMPATE");
+        assertThat(resultado.getResultado()).isEqualTo(SituacaoResultado.EMPATE);
     }
 
     @Test
-    void deveRetornarSemVotos() {
+    void deveRetornarEmpateQuandoSemVotos() {
         Pauta pauta = Pauta.builder().id(1L).titulo("Pauta Teste").build();
         when(pautaRepository.findById(1L)).thenReturn(Optional.of(pauta));
         when(votoRepository.countByPautaIdAndVoto(eq(1L), eq(VotoEnum.SIM))).thenReturn(0L);
@@ -105,7 +106,8 @@ class PautaServiceTest {
 
         ResultadoResponse resultado = pautaService.obterResultado(1L);
 
-        assertThat(resultado.getResultado()).isEqualTo("SEM VOTOS");
+        assertThat(resultado.getTotalVotos()).isZero();
+        assertThat(resultado.getResultado()).isEqualTo(SituacaoResultado.EMPATE);
     }
 
     @Test

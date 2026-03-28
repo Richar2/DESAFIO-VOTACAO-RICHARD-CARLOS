@@ -41,7 +41,7 @@ class SessaoVotacaoServiceTest {
                 .id(1L)
                 .pauta(pauta)
                 .inicioEm(LocalDateTime.now())
-                .fimEm(LocalDateTime.now().plusMinutes(1))
+                .fimEm(LocalDateTime.now().plusSeconds(60))
                 .build();
         when(sessaoVotacaoRepository.save(any(SessaoVotacao.class))).thenReturn(sessaoSalva);
 
@@ -62,11 +62,11 @@ class SessaoVotacaoServiceTest {
                 .id(1L)
                 .pauta(pauta)
                 .inicioEm(LocalDateTime.now())
-                .fimEm(LocalDateTime.now().plusMinutes(10))
+                .fimEm(LocalDateTime.now().plusSeconds(120))
                 .build();
         when(sessaoVotacaoRepository.save(any(SessaoVotacao.class))).thenReturn(sessaoSalva);
 
-        SessaoRequest request = SessaoRequest.builder().duracaoMinutos(10L).build();
+        SessaoRequest request = SessaoRequest.builder().duracaoSegundos(120L).build();
         SessaoResponse response = sessaoVotacaoService.abrir(1L, request);
 
         assertThat(response.getId()).isEqualTo(1L);
