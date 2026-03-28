@@ -14,24 +14,98 @@ API REST para gerenciar sessoes de votacao de pautas em cooperativas. Desenvolvi
 
 ## Como executar
 
-### Com Docker (recomendado)
+### Opcao 1: Com Docker (recomendado)
+
+> Requisitos: **Docker** e **Docker Compose** instalados.
+
+Basta um comando. O Docker cuida de subir o banco PostgreSQL e a aplicacao:
 
 ```bash
 docker compose up --build
 ```
 
-A aplicacao estara disponivel em `http://localhost:8081`.
+Aguarde ate ver no log:
+```
+votacao-app  | Started VotacaoApplication
+```
 
-### Sem Docker
+| Servico     | URL                                    |
+|-------------|----------------------------------------|
+| API         | http://localhost:8081/api/v1/pautas     |
+| Swagger UI  | http://localhost:8081/swagger-ui.html   |
+| PostgreSQL  | localhost:5433 (usuario: postgres, senha: postgres) |
 
-Requisitos: Java 17, Maven 3.9+, PostgreSQL rodando na porta 5432.
+Para parar:
+```bash
+docker compose down        # mantem os dados do banco
+docker compose down -v     # remove os dados do banco
+```
+
+---
+
+### Opcao 2: Sem Docker (direto na maquina)
+
+#### Requisitos
+
+| Requisito       | Versao minima |
+|-----------------|---------------|
+| Java (JDK)      | 17            |
+| Maven           | 3.9+          |
+| PostgreSQL      | 12+           |
+
+> O projeto inclui o Maven Wrapper (`mvnw`), entao nao e obrigatorio ter o Maven instalado globalmente.
+
+#### Passo 1: Criar o banco de dados
+
+Certifique-se de que o PostgreSQL esta rodando na porta 5432 e execute:
 
 ```bash
-createdb votacao
+psql -U postgres -c "CREATE DATABASE votacao;"
+```
+
+Ou via `createdb` se disponivel:
+```bash
+createdb -U postgres votacao
+```
+
+#### Passo 2: Configurar credenciais (se necessario)
+
+Por padrao, a aplicacao conecta com:
+- **Host:** localhost
+- **Porta:** 5432
+- **Banco:** votacao
+- **Usuario:** postgres
+- **Senha:** postgres
+
+Se suas credenciais forem diferentes, exporte as variaveis de ambiente antes de rodar:
+
+```bash
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=votacao
+export DB_USER=seu_usuario
+export DB_PASSWORD=sua_senha
+```
+
+#### Passo 3: Rodar a aplicacao
+
+```bash
 ./mvnw spring-boot:run
 ```
 
-Neste caso, a aplicacao roda em `http://localhost:8080`.
+Aguarde ate ver no log:
+```
+Started VotacaoApplication
+```
+
+| Servico     | URL                                    |
+|-------------|----------------------------------------|
+| API         | http://localhost:8080/api/v1/pautas     |
+| Swagger UI  | http://localhost:8080/swagger-ui.html   |
+
+> As migrations do Flyway sao executadas automaticamente na primeira inicializacao.
+
+---
 
 ### Executar testes
 
@@ -39,7 +113,7 @@ Neste caso, a aplicacao roda em `http://localhost:8080`.
 ./mvnw test
 ```
 
-Os testes usam H2 em modo PostgreSQL, sem necessidade de banco externo.
+Os testes usam **H2 em modo PostgreSQL** (em memoria). Nao e necessario ter banco instalado para rodar os testes.
 
 ## Endpoints
 
