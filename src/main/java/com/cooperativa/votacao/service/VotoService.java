@@ -1,6 +1,6 @@
 package com.cooperativa.votacao.service;
 
-import com.cooperativa.votacao.client.CpfValidatorClient;
+import com.cooperativa.votacao.client.CpfValidationStrategy;
 import com.cooperativa.votacao.dto.CpfValidationResponse;
 import com.cooperativa.votacao.dto.VotoRequest;
 import com.cooperativa.votacao.dto.VotoResponse;
@@ -22,7 +22,7 @@ public class VotoService {
     private final VotoRepository votoRepository;
     private final PautaService pautaService;
     private final SessaoVotacaoService sessaoVotacaoService;
-    private final CpfValidatorClient cpfValidatorClient;
+    private final CpfValidationStrategy cpfValidationStrategy;
 
     @Transactional
     public VotoResponse votar(Long pautaId, VotoRequest request) {
@@ -39,7 +39,7 @@ public class VotoService {
 
         // Bônus: validação de CPF se fornecido
         if (request.getCpf() != null && !request.getCpf().isBlank()) {
-            CpfValidationResponse cpfValidation = cpfValidatorClient.validarCpf(request.getCpf());
+            CpfValidationResponse cpfValidation = cpfValidationStrategy.validarCpf(request.getCpf());
             if (cpfValidation.getStatus() == StatusCpf.UNABLE_TO_VOTE) {
                 throw new BusinessException("Associado não está habilitado para votar (CPF: UNABLE_TO_VOTE)");
             }

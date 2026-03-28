@@ -8,14 +8,16 @@ import org.springframework.stereotype.Component;
 import java.util.Random;
 
 /**
- * Client fake que simula um serviço externo de validação de CPF.
- * Em produção, seria substituído por uma chamada HTTP real.
+ * Implementação fake que simula um serviço externo de validação de CPF.
+ * Em produção, basta criar outra implementação de CpfValidationStrategy
+ * e marcá-la como @Primary ou ativá-la via @Profile.
  */
 @Component
-public class CpfValidatorClient {
+public class CpfValidatorClient implements CpfValidationStrategy {
 
     private final Random random = new Random();
 
+    @Override
     public CpfValidationResponse validarCpf(String cpf) {
         if (cpf == null || !cpf.matches("\\d{11}")) {
             throw new InvalidCpfException("CPF inválido: " + cpf);
