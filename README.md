@@ -115,6 +115,24 @@ Started VotacaoApplication
 
 Os testes usam **H2 em modo PostgreSQL** (em memoria). Nao e necessario ter banco instalado para rodar os testes.
 
+## Fluxo de funcionamento
+
+```
+┌─────────────────┐     ┌─────────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  1. Criar pauta  │────>│  2. Abrir sessao     │────>│  3. Votar        │────>│  4. Resultado    │
+│  POST /agendas   │     │  POST /sessions      │     │  POST /votes     │     │  GET /result     │
+└─────────────────┘     └─────────────────────┘     └─────────────────┘     └─────────────────┘
+                         Duracao: 60s (padrao)       Regras:                  Retorna:
+                         ou informada no request     - Sessao deve estar      - totalYes
+                                                       aberta                - totalNo
+                                                     - 1 voto por associado  - resultado
+                                                     - CPF validado (bonus)    (APROVADA/
+                                                                                REPROVADA/
+                                                                                EMPATE)
+```
+
+> **Importante:** cada etapa depende da anterior. Nao e possivel votar sem antes abrir uma sessao, nem abrir sessao sem antes criar a pauta.
+
 ## Endpoints
 
 Base URL: `http://localhost:8081/api/v1` (Docker) ou `http://localhost:8080/api/v1` (local)
