@@ -1,15 +1,15 @@
-ALTER TABLE pauta ADD COLUMN uuid VARCHAR(36);
-ALTER TABLE sessao_votacao ADD COLUMN uuid VARCHAR(36);
-ALTER TABLE voto ADD COLUMN uuid VARCHAR(36);
+ALTER TABLE agenda ADD COLUMN uuid VARCHAR(36);
+ALTER TABLE voting_session ADD COLUMN uuid VARCHAR(36);
+ALTER TABLE vote ADD COLUMN uuid VARCHAR(36);
 
-UPDATE pauta SET uuid = gen_random_uuid()::text WHERE uuid IS NULL;
-UPDATE sessao_votacao SET uuid = gen_random_uuid()::text WHERE uuid IS NULL;
-UPDATE voto SET uuid = gen_random_uuid()::text WHERE uuid IS NULL;
+UPDATE agenda SET uuid = gen_random_uuid()::text WHERE uuid IS NULL;
+UPDATE voting_session SET uuid = gen_random_uuid()::text WHERE uuid IS NULL;
+UPDATE vote SET uuid = gen_random_uuid()::text WHERE uuid IS NULL;
 
-ALTER TABLE pauta ALTER COLUMN uuid SET NOT NULL;
-ALTER TABLE sessao_votacao ALTER COLUMN uuid SET NOT NULL;
-ALTER TABLE voto ALTER COLUMN uuid SET NOT NULL;
+ALTER TABLE agenda ALTER COLUMN uuid SET NOT NULL;
+ALTER TABLE voting_session ALTER COLUMN uuid SET NOT NULL;
+ALTER TABLE vote ALTER COLUMN uuid SET NOT NULL;
 
-CREATE UNIQUE INDEX idx_pauta_uuid ON pauta(uuid);
-CREATE UNIQUE INDEX idx_sessao_uuid ON sessao_votacao(uuid);
-CREATE UNIQUE INDEX idx_voto_uuid ON voto(uuid);
+CREATE UNIQUE INDEX idx_agenda_uuid ON agenda(uuid);
+CREATE UNIQUE INDEX idx_voting_session_uuid ON voting_session(uuid);
+CREATE UNIQUE INDEX idx_vote_uuid ON vote(uuid);
