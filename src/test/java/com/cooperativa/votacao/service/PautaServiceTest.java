@@ -36,7 +36,7 @@ class PautaServiceTest {
     private ResultadoCalculatorStrategy resultadoCalculator;
 
     @InjectMocks
-    private PautaService pautaService;
+    private PautaServiceImpl pautaService;
 
     @Test
     void deveCriarPautaComSucesso() {

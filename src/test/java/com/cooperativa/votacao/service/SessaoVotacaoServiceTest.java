@@ -29,7 +29,7 @@ class SessaoVotacaoServiceTest {
     private PautaService pautaService;
 
     @InjectMocks
-    private SessaoVotacaoService sessaoVotacaoService;
+    private SessaoVotacaoServiceImpl sessaoVotacaoService;
 
     @Test
     void deveAbrirSessaoComDuracaoPadrao() {

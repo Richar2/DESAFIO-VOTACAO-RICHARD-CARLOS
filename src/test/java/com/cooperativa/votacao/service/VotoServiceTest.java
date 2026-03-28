@@ -37,7 +37,7 @@ class VotoServiceTest {
     private CpfValidationStrategy cpfValidationStrategy;
 
     @InjectMocks
-    private VotoService votoService;
+    private VotoServiceImpl votoService;
 
     @Test
     void deveRegistrarVotoComSucesso() {
