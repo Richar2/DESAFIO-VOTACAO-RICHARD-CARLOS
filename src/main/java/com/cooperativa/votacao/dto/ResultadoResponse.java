@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ResultadoResponse {
-    private Long pautaId;
+    private String pautaId;
     private String tituloPauta;
     private long totalSim;
     private long totalNao;

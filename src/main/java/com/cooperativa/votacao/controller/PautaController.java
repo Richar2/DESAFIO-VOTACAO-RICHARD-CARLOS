@@ -26,20 +26,20 @@ public class PautaController {
 
     @PostMapping("/{pautaId}/sessoes")
     public ResponseEntity<SessaoResponse> abrirSessao(
-            @PathVariable Long pautaId,
+            @PathVariable String pautaId,
             @RequestBody(required = false) SessaoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(sessaoVotacaoService.abrir(pautaId, request));
     }
 
     @PostMapping("/{pautaId}/votos")
     public ResponseEntity<VotoResponse> votar(
-            @PathVariable Long pautaId,
+            @PathVariable String pautaId,
             @Valid @RequestBody VotoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(votoService.votar(pautaId, request));
     }
 
     @GetMapping("/{pautaId}/resultado")
-    public ResponseEntity<ResultadoResponse> resultado(@PathVariable Long pautaId) {
+    public ResponseEntity<ResultadoResponse> resultado(@PathVariable String pautaId) {
         return ResponseEntity.ok(pautaService.obterResultado(pautaId));
     }
 }

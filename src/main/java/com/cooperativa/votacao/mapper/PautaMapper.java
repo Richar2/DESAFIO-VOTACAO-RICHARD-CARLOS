@@ -17,7 +17,7 @@ public class PautaMapper {
 
     public static PautaResponse toResponse(Pauta pauta) {
         return PautaResponse.builder()
-                .id(pauta.getId())
+                .id(pauta.getUuid())
                 .titulo(pauta.getTitulo())
                 .descricao(pauta.getDescricao())
                 .createdAt(pauta.getCreatedAt())

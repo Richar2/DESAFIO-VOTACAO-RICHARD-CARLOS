@@ -29,16 +29,15 @@ public class PautaService {
     }
 
     @Transactional(readOnly = true)
-    public ResultadoResponse obterResultado(Long pautaId) {
-        Pauta pauta = pautaRepository.findById(pautaId)
-                .orElseThrow(() -> new NotFoundException("Pauta não encontrada com id: " + pautaId));
+    public ResultadoResponse obterResultado(String pautaUuid) {
+        Pauta pauta = buscarPorUuid(pautaUuid);
 
-        long votosSim = votoRepository.countByPautaIdAndVoto(pautaId, VotoEnum.SIM);
-        long votosNao = votoRepository.countByPautaIdAndVoto(pautaId, VotoEnum.NAO);
+        long votosSim = votoRepository.countByPautaIdAndVoto(pauta.getId(), VotoEnum.SIM);
+        long votosNao = votoRepository.countByPautaIdAndVoto(pauta.getId(), VotoEnum.NAO);
         long totalVotos = votosSim + votosNao;
 
         return ResultadoResponse.builder()
-                .pautaId(pauta.getId())
+                .pautaId(pauta.getUuid())
                 .tituloPauta(pauta.getTitulo())
                 .totalSim(votosSim)
                 .totalNao(votosNao)
@@ -47,8 +46,8 @@ public class PautaService {
                 .build();
     }
 
-    public Pauta buscarPorId(Long id) {
-        return pautaRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Pauta não encontrada com id: " + id));
+    public Pauta buscarPorUuid(String uuid) {
+        return pautaRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException("Pauta não encontrada: " + uuid));
     }
 }

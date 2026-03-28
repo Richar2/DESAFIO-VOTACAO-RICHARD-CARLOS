@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class SessaoResponse {
-    private Long id;
-    private Long pautaId;
+    private String id;
+    private String pautaId;
     private LocalDateTime inicioEm;
     private LocalDateTime fimEm;
 }

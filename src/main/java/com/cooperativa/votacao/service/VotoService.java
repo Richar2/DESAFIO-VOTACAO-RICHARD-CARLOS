@@ -25,19 +25,18 @@ public class VotoService {
     private final CpfValidationStrategy cpfValidationStrategy;
 
     @Transactional
-    public VotoResponse votar(Long pautaId, VotoRequest request) {
-        Pauta pauta = pautaService.buscarPorId(pautaId);
+    public VotoResponse votar(String pautaUuid, VotoRequest request) {
+        Pauta pauta = pautaService.buscarPorUuid(pautaUuid);
 
-        SessaoVotacao sessao = sessaoVotacaoService.buscarPorPautaId(pautaId);
+        SessaoVotacao sessao = sessaoVotacaoService.buscarPorPautaId(pauta.getId());
         if (!sessao.isAberta()) {
             throw new BusinessException("A sessão de votação não está aberta");
         }
 
-        if (votoRepository.existsByPautaIdAndAssociadoId(pautaId, request.getAssociadoId())) {
+        if (votoRepository.existsByPautaIdAndAssociadoId(pauta.getId(), request.getAssociadoId())) {
             throw new BusinessException("Associado já votou nesta pauta");
         }
 
-        // Bônus: validação de CPF se fornecido
         if (request.getCpf() != null && !request.getCpf().isBlank()) {
             CpfValidationResponse cpfValidation = cpfValidationStrategy.validarCpf(request.getCpf());
             if (cpfValidation.getStatus() == StatusCpf.UNABLE_TO_VOTE) {

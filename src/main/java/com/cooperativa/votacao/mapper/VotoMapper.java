@@ -9,8 +9,8 @@ public class VotoMapper {
 
     public static VotoResponse toResponse(Voto voto) {
         return VotoResponse.builder()
-                .id(voto.getId())
-                .pautaId(voto.getPauta().getId())
+                .id(voto.getUuid())
+                .pautaId(voto.getPauta().getUuid())
                 .associadoId(voto.getAssociadoId())
                 .voto(voto.getVoto())
                 .criadoEm(voto.getCriadoEm())

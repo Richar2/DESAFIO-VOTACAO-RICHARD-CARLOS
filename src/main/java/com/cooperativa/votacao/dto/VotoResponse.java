@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class VotoResponse {
-    private Long id;
-    private Long pautaId;
+    private String id;
+    private String pautaId;
     private String associadoId;
     private VotoEnum voto;
     private LocalDateTime criadoEm;

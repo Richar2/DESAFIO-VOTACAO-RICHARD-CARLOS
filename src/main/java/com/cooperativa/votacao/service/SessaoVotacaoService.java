@@ -23,10 +23,10 @@ public class SessaoVotacaoService {
     private final PautaService pautaService;
 
     @Transactional
-    public SessaoResponse abrir(Long pautaId, SessaoRequest request) {
-        Pauta pauta = pautaService.buscarPorId(pautaId);
+    public SessaoResponse abrir(String pautaUuid, SessaoRequest request) {
+        Pauta pauta = pautaService.buscarPorUuid(pautaUuid);
 
-        sessaoVotacaoRepository.findByPautaId(pautaId).ifPresent(s -> {
+        sessaoVotacaoRepository.findByPautaId(pauta.getId()).ifPresent(s -> {
             throw new BusinessException("Já existe uma sessão de votação para esta pauta");
         });
 
