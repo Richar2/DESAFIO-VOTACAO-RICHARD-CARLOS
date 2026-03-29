@@ -31,7 +31,7 @@ votacao-app  | Started VotacaoApplication
 
 | Servico     | URL                                    |
 |-------------|----------------------------------------|
-| API         | http://localhost:8081/api/v1/agendas     |
+| API         | http://localhost:8081/api/v1/pautas     |
 | Swagger UI  | http://localhost:8081/swagger-ui.html   |
 | PostgreSQL  | localhost:5433 (usuario: postgres, senha: postgres) |
 
@@ -100,7 +100,7 @@ Started VotacaoApplication
 
 | Servico     | URL                                    |
 |-------------|----------------------------------------|
-| API         | http://localhost:8080/api/v1/agendas     |
+| API         | http://localhost:8080/api/v1/pautas     |
 | Swagger UI  | http://localhost:8080/swagger-ui.html   |
 
 > As migrations do Flyway sao executadas automaticamente na primeira inicializacao.
@@ -118,20 +118,21 @@ Os testes usam **H2 em modo PostgreSQL** (em memoria). Nao e necessario ter banc
 ## Fluxo de funcionamento
 
 ```
-┌─────────────────┐     ┌─────────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  1. Criar pauta  │────>│  2. Abrir sessao     │────>│  3. Votar        │────>│  4. Resultado    │
-│  POST /agendas   │     │  POST /sessions      │     │  POST /votes     │     │  GET /result     │
-└─────────────────┘     └─────────────────────┘     └─────────────────┘     └─────────────────┘
-                         Duracao: 60s (padrao)       Regras:                  Retorna:
-                         ou informada no request     - Sessao deve estar      - totalYes
-                                                       aberta                - totalNo
-                                                     - 1 voto por associado  - resultado
-                                                     - CPF validado (bonus)    (APROVADA/
-                                                                                REPROVADA/
-                                                                                EMPATE)
+┌─────────────────┐     ┌─────────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
+│  1. Criar pauta  │────>│  2. Abrir sessao     │────>│  3. Votar             │────>│  4. Resultado    │
+│  POST /agendas   │     │  POST /{agendaId}    │     │  POST /{agendaId}     │     │  GET /{agendaId} │
+│                  │     │       /sessoes       │     │  /sessoes/{sessionId}│     │     /resultado      │
+└─────────────────┘     └─────────────────────┘     │       /votos           │     └─────────────────┘
+                         Duracao: 60s (padrao)       └──────────────────────┘      Retorna:
+                         ou informada no request     Regras:                       - totalYes
+                                                     - Sessao deve estar aberta   - totalNo
+                                                     - SessionId obrigatorio       - resultado
+                                                     - 1 voto por associado         (APROVADA/
+                                                     - CPF validado (bonus)          REPROVADA/
+                                                                                     EMPATE)
 ```
 
-> **Importante:** cada etapa depende da anterior. Nao e possivel votar sem antes abrir uma sessao, nem abrir sessao sem antes criar a pauta.
+> **Importante:** para registrar votos, e necessario que a pauta exista e que haja uma sessao aberta para ela. O voto e vinculado a sessao via `sessionId`. A apuracao pode ser consultada a qualquer momento a partir da pauta, refletindo o estado atual da votacao.
 
 ## Endpoints
 
@@ -139,10 +140,10 @@ Base URL: `http://localhost:8081/api/v1` (Docker) ou `http://localhost:8080/api/
 
 | Metodo | Endpoint                          | Descricao                    |
 |--------|-----------------------------------|------------------------------|
-| POST   | `/api/v1/agendas`                  | Cadastrar nova pauta         |
-| POST   | `/api/v1/agendas/{id}/sessions`     | Abrir sessao de votacao      |
-| POST   | `/api/v1/agendas/{id}/votes`       | Registrar voto               |
-| GET    | `/api/v1/agendas/{id}/result`   | Consultar resultado          |
+| POST   | `/api/v1/pautas`                  | Cadastrar nova pauta         |
+| POST   | `/api/v1/pautas/{id}/sessoes`     | Abrir sessao de votacao      |
+| POST   | `/api/v1/pautas/{id}/sessoes/{sessionId}/votos` | Registrar voto  |
+| GET    | `/api/v1/pautas/{id}/resultado`   | Consultar resultado          |
 
 > O `{id}` nos endpoints e um UUID publico. O id interno (BIGINT) e usado apenas nos relacionamentos do banco.
 
@@ -150,7 +151,7 @@ Base URL: `http://localhost:8081/api/v1` (Docker) ou `http://localhost:8080/api/
 
 **Criar pauta:**
 ```bash
-curl -X POST http://localhost:8081/api/v1/agendas \
+curl -X POST http://localhost:8081/api/v1/pautas \
   -H "Content-Type: application/json" \
   -d '{"title": "Reforma do estatuto", "description": "Alteracoes no estatuto social"}'
 ```
@@ -167,33 +168,33 @@ Resposta (201):
 
 **Abrir sessao (120 segundos):**
 ```bash
-curl -X POST http://localhost:8081/api/v1/agendas/{id}/sessions \
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes \
   -H "Content-Type: application/json" \
   -d '{"durationSeconds": 120}'
 ```
 
 **Abrir sessao (padrao 60 segundos):**
 ```bash
-curl -X POST http://localhost:8081/api/v1/agendas/{id}/sessions
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes
 ```
 
 **Votar:**
 ```bash
-curl -X POST http://localhost:8081/api/v1/agendas/{id}/votes \
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes/{sessionId}/votos \
   -H "Content-Type: application/json" \
   -d '{"associateId": "assoc-001", "voto": "SIM"}'
 ```
 
 **Votar com CPF (bonus):**
 ```bash
-curl -X POST http://localhost:8081/api/v1/agendas/{id}/votes \
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes/{sessionId}/votos \
   -H "Content-Type: application/json" \
   -d '{"associateId": "assoc-001", "voto": "SIM", "cpf": "52998224725"}'
 ```
 
 **Consultar resultado:**
 ```bash
-curl http://localhost:8081/api/v1/agendas/{id}/result
+curl http://localhost:8081/api/v1/pautas/{id}/resultado
 ```
 
 Resposta (200):
