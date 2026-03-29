@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface SessaoVotacaoRepository extends JpaRepository<SessaoVotacao, Long> {
     Optional<SessaoVotacao> findByAgendaId(Long agendaId);
+    Optional<SessaoVotacao> findByUuid(String uuid);
 }

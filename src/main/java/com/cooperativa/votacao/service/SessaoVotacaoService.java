@@ -9,4 +9,6 @@ public interface SessaoVotacaoService {
     SessaoResponse abrir(String agendaUuid, SessaoRequest request);
 
     SessaoVotacao findByAgendaId(Long agendaId);
+
+    SessaoVotacao findByUuid(String sessionUuid);
 }

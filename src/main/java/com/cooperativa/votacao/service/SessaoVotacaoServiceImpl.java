@@ -51,4 +51,10 @@ public class SessaoVotacaoServiceImpl implements SessaoVotacaoService {
         return sessaoVotacaoRepository.findByAgendaId(agendaId)
                 .orElseThrow(() -> new BusinessException("No voting session found for this agenda"));
     }
+
+    @Override
+    public SessaoVotacao findByUuid(String sessionUuid) {
+        return sessaoVotacaoRepository.findByUuid(sessionUuid)
+                .orElseThrow(() -> new BusinessException("Voting session not found: " + sessionUuid));
+    }
 }

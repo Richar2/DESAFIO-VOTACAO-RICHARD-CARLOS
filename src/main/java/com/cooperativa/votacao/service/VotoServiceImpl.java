@@ -26,15 +26,19 @@ public class VotoServiceImpl implements VotoService {
 
     @Override
     @Transactional
-    public VotoResponse votar(String agendaUuid, VotoRequest request) {
-        Pauta pauta = pautaService.findByUuid(agendaUuid);
+    public VotoResponse votar(String agendaUuid, String sessionUuid, VotoRequest request) {
+        Pauta agenda = pautaService.findByUuid(agendaUuid);
+        SessaoVotacao sessao = sessaoVotacaoService.findByUuid(sessionUuid);
 
-        SessaoVotacao sessao = sessaoVotacaoService.findByAgendaId(pauta.getId());
+        if (!sessao.getAgenda().getId().equals(agenda.getId())) {
+            throw new BusinessException("Voting session does not belong to this agenda");
+        }
+
         if (!sessao.isOpen()) {
             throw new BusinessException("Voting session is not open");
         }
 
-        if (votoRepository.existsByAgendaIdAndAssociateId(pauta.getId(), request.getAssociateId())) {
+        if (votoRepository.existsByAgendaIdAndAssociateId(agenda.getId(), request.getAssociateId())) {
             throw new BusinessException("Associate has already voted on this agenda");
         }
 
@@ -46,13 +50,13 @@ public class VotoServiceImpl implements VotoService {
         }
 
         Voto voto = Voto.builder()
-                .agenda(pauta)
+                .agenda(agenda)
                 .associateId(request.getAssociateId())
                 .cpf(request.getCpf())
                 .voto(request.getVoto())
                 .build();
 
         voto = votoRepository.save(voto);
-        return VotoMapper.toResponse(voto);
+        return VotoMapper.toResponse(voto, sessao);
     }
 }
