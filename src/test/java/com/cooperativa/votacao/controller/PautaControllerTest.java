@@ -31,7 +31,7 @@ class PautaControllerTest {
                 .description("Descrição da pauta")
                 .build();
 
-        mockMvc.perform(post("/api/v1/agendas")
+        mockMvc.perform(post("/api/v1/pautas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -46,7 +46,7 @@ class PautaControllerTest {
                 .title("")
                 .build();
 
-        mockMvc.perform(post("/api/v1/agendas")
+        mockMvc.perform(post("/api/v1/pautas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -56,7 +56,7 @@ class PautaControllerTest {
     void deveAbrirSessaoComDuracaoDefault() throws Exception {
         String agendaId = criarPauta("Pauta Sessao Default");
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
+        mockMvc.perform(post("/api/v1/pautas/" + agendaId + "/sessoes")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.agendaId").value(agendaId))
@@ -67,7 +67,7 @@ class PautaControllerTest {
     void deveAbrirSessaoComDuracaoInformada() throws Exception {
         String agendaId = criarPauta("Pauta Sessao Custom");
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
+        mockMvc.perform(post("/api/v1/pautas/" + agendaId + "/sessoes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"durationSeconds\": 120}"))
                 .andExpect(status().isCreated())
@@ -77,24 +77,23 @@ class PautaControllerTest {
     @Test
     void deveAbrirSessaoEVotar() throws Exception {
         String agendaId = criarPauta("Pauta Votação");
+        String sessionId = abrirSessao(agendaId, 600);
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"durationSeconds\": 600}"))
-                .andExpect(status().isCreated());
+        String votePath = "/api/v1/pautas/" + agendaId + "/sessoes/" + sessionId + "/votos";
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
+        mockMvc.perform(post(votePath)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associateId\": \"assoc-1\", \"voto\": \"SIM\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.voto").value("SIM"));
+                .andExpect(jsonPath("$.voto").value("SIM"))
+                .andExpect(jsonPath("$.sessionId").value(sessionId));
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
+        mockMvc.perform(post(votePath)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associateId\": \"assoc-2\", \"voto\": \"NAO\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/agendas/" + agendaId + "/result"))
+        mockMvc.perform(get("/api/v1/pautas/" + agendaId + "/resultado"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalYes").value(1))
                 .andExpect(jsonPath("$.totalNo").value(1))
@@ -105,18 +104,16 @@ class PautaControllerTest {
     @Test
     void deveImpedirVotoDuplicado() throws Exception {
         String agendaId = criarPauta("Pauta Voto Duplicado");
+        String sessionId = abrirSessao(agendaId, 600);
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/sessions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"durationSeconds\": 600}"))
-                .andExpect(status().isCreated());
+        String votePath = "/api/v1/pautas/" + agendaId + "/sessoes/" + sessionId + "/votos";
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
+        mockMvc.perform(post(votePath)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associateId\": \"assoc-1\", \"voto\": \"SIM\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/agendas/" + agendaId + "/votes")
+        mockMvc.perform(post(votePath)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associateId\": \"assoc-1\", \"voto\": \"NAO\"}"))
                 .andExpect(status().isUnprocessableEntity());
@@ -124,8 +121,18 @@ class PautaControllerTest {
 
     @Test
     void deveRetornar404ParaPautaInexistente() throws Exception {
-        mockMvc.perform(get("/api/v1/agendas/uuid-inexistente/result"))
+        mockMvc.perform(get("/api/v1/pautas/uuid-inexistente/resultado"))
                 .andExpect(status().isNotFound());
+    }
+
+    private String abrirSessao(String agendaId, int durationSeconds) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/pautas/" + agendaId + "/sessoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"durationSeconds\": " + durationSeconds + "}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        return objectMapper.readTree(response).get("id").asText();
     }
 
     private String criarPauta(String title) throws Exception {
@@ -133,7 +140,7 @@ class PautaControllerTest {
                 .title(title)
                 .build();
 
-        String response = mockMvc.perform(post("/api/v1/agendas")
+        String response = mockMvc.perform(post("/api/v1/pautas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
