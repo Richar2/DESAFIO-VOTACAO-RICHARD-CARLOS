@@ -26,14 +26,10 @@ public class VotoServiceImpl implements VotoService {
 
     @Override
     @Transactional
-    public VotoResponse votar(String agendaUuid, String sessionUuid, VotoRequest request) {
+    public VotoResponse votar(String agendaUuid, VotoRequest request) {
         Pauta agenda = pautaService.findByUuid(agendaUuid);
-        SessaoVotacao sessao = sessaoVotacaoService.findByUuid(sessionUuid);
 
-        if (!sessao.getAgenda().getId().equals(agenda.getId())) {
-            throw new BusinessException("Voting session does not belong to this agenda");
-        }
-
+        SessaoVotacao sessao = sessaoVotacaoService.findByAgendaId(agenda.getId());
         if (!sessao.isOpen()) {
             throw new BusinessException("Voting session is not open");
         }

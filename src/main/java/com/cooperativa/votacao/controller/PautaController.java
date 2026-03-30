@@ -54,15 +54,15 @@ public class PautaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(sessaoVotacaoService.abrir(agendaId, request));
     }
 
-    @PostMapping("/{agendaId}/sessoes/{sessionId}/votos")
-    @Operation(summary = "Register vote", description = "Registers an associate's vote on a specific voting session")
+    @PostMapping("/{agendaId}/votos")
+    @Operation(summary = "Register vote", description = "Registers an associate's vote on the agenda. The voting session is resolved internally")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Vote registered successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid request body or CPF",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Agenda not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "422", description = "Session closed, already voted, or session does not belong to agenda",
+            @ApiResponse(responseCode = "422", description = "No session, session closed, or already voted",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "Duplicate vote (database constraint)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -70,10 +70,8 @@ public class PautaController {
     public ResponseEntity<VotoResponse> votar(
             @Parameter(description = "Agenda UUID", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
             @PathVariable String agendaId,
-            @Parameter(description = "Session UUID", example = "b2c3d4e5-f6a7-8901-bcde-f12345678901")
-            @PathVariable String sessionId,
             @Valid @RequestBody VotoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(votoService.votar(agendaId, sessionId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(votoService.votar(agendaId, request));
     }
 
     @GetMapping("/{agendaId}/resultado")
