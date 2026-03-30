@@ -118,21 +118,21 @@ Os testes usam **H2 em modo PostgreSQL** (em memoria). Nao e necessario ter banc
 ## Fluxo de funcionamento
 
 ```
-┌─────────────────┐     ┌─────────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  1. Criar pauta  │────>│  2. Abrir sessao     │────>│  3. Votar             │────>│  4. Resultado    │
-│  POST /agendas   │     │  POST /{agendaId}    │     │  POST /{agendaId}     │     │  GET /{agendaId} │
-│                  │     │       /sessoes       │     │  /sessoes/{sessionId}│     │     /resultado      │
-└─────────────────┘     └─────────────────────┘     │       /votos           │     └─────────────────┘
-                         Duracao: 60s (padrao)       └──────────────────────┘      Retorna:
-                         ou informada no request     Regras:                       - totalYes
-                                                     - Sessao deve estar aberta   - totalNo
-                                                     - SessionId obrigatorio       - resultado
-                                                     - 1 voto por associado         (APROVADA/
-                                                     - CPF validado (bonus)          REPROVADA/
-                                                                                     EMPATE)
+┌─────────────────┐     ┌─────────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  1. Criar pauta  │────>│  2. Abrir sessao     │────>│  3. Votar        │────>│  4. Resultado    │
+│  POST /pautas    │     │  POST /{id}/sessoes  │     │  POST /{id}/votos│     │  GET /{id}       │
+│                  │     │                      │     │                  │     │    /resultado    │
+└─────────────────┘     └─────────────────────┘     └─────────────────┘     └─────────────────┘
+                         Duracao: 60s (padrao)       Regras:                  Retorna:
+                         ou informada no request     - Sessao deve estar      - totalYes
+                                                       aberta (validada      - totalNo
+                                                       internamente)         - resultado
+                                                     - 1 voto por associado    (APROVADA/
+                                                     - CPF validado (bonus)     REPROVADA/
+                                                                                EMPATE)
 ```
 
-> **Importante:** para registrar votos, e necessario que a pauta exista e que haja uma sessao aberta para ela. O voto e vinculado a sessao via `sessionId`. A apuracao pode ser consultada a qualquer momento a partir da pauta, refletindo o estado atual da votacao.
+> **Importante:** para registrar votos, e necessario que a pauta exista e que haja uma sessao aberta para ela. A sessao e resolvida internamente pela pauta. A apuracao pode ser consultada a qualquer momento, refletindo o estado atual da votacao.
 
 ## Endpoints
 
@@ -142,7 +142,7 @@ Base URL: `http://localhost:8081/api/v1` (Docker) ou `http://localhost:8080/api/
 |--------|-----------------------------------|------------------------------|
 | POST   | `/api/v1/pautas`                  | Cadastrar nova pauta         |
 | POST   | `/api/v1/pautas/{id}/sessoes`     | Abrir sessao de votacao      |
-| POST   | `/api/v1/pautas/{id}/sessoes/{sessionId}/votos` | Registrar voto  |
+| POST   | `/api/v1/pautas/{id}/votos` | Registrar voto  |
 | GET    | `/api/v1/pautas/{id}/resultado`   | Consultar resultado          |
 
 > O `{id}` nos endpoints e um UUID publico. O id interno (BIGINT) e usado apenas nos relacionamentos do banco.
@@ -180,14 +180,14 @@ curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes
 
 **Votar:**
 ```bash
-curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes/{sessionId}/votos \
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/votos \
   -H "Content-Type: application/json" \
   -d '{"associateId": "assoc-001", "voto": "SIM"}'
 ```
 
 **Votar com CPF (bonus):**
 ```bash
-curl -X POST http://localhost:8081/api/v1/pautas/{id}/sessoes/{sessionId}/votos \
+curl -X POST http://localhost:8081/api/v1/pautas/{id}/votos \
   -H "Content-Type: application/json" \
   -d '{"associateId": "assoc-001", "voto": "SIM", "cpf": "52998224725"}'
 ```

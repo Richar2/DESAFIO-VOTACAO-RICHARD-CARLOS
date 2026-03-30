@@ -53,7 +53,7 @@ class VotoServiceTest {
                 .build();
 
         when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
-        when(sessaoVotacaoService.findByUuid("session-uuid")).thenReturn(sessao);
+        when(sessaoVotacaoService.findByAgendaId(1L)).thenReturn(sessao);
         when(votoRepository.existsByAgendaIdAndAssociateId(1L, "assoc-1")).thenReturn(false);
 
         Voto votoSalvo = Voto.builder()
@@ -71,7 +71,7 @@ class VotoServiceTest {
                 .voto(VotoEnum.SIM)
                 .build();
 
-        VotoResponse response = votoService.votar("agenda-uuid", "session-uuid", request);
+        VotoResponse response = votoService.votar("agenda-uuid", request);
 
         assertThat(response.getId()).isEqualTo("vote-uuid");
         assertThat(response.getSessionId()).isEqualTo("session-uuid");
@@ -91,14 +91,14 @@ class VotoServiceTest {
                 .build();
 
         when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
-        when(sessaoVotacaoService.findByUuid("session-uuid")).thenReturn(sessao);
+        when(sessaoVotacaoService.findByAgendaId(1L)).thenReturn(sessao);
 
         VotoRequest request = VotoRequest.builder()
                 .associateId("assoc-1")
                 .voto(VotoEnum.SIM)
                 .build();
 
-        assertThatThrownBy(() -> votoService.votar("agenda-uuid", "session-uuid", request))
+        assertThatThrownBy(() -> votoService.votar("agenda-uuid", request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Voting session is not open");
     }
@@ -115,7 +115,7 @@ class VotoServiceTest {
                 .build();
 
         when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
-        when(sessaoVotacaoService.findByUuid("session-uuid")).thenReturn(sessao);
+        when(sessaoVotacaoService.findByAgendaId(1L)).thenReturn(sessao);
         when(votoRepository.existsByAgendaIdAndAssociateId(1L, "assoc-1")).thenReturn(true);
 
         VotoRequest request = VotoRequest.builder()
@@ -123,7 +123,7 @@ class VotoServiceTest {
                 .voto(VotoEnum.NAO)
                 .build();
 
-        assertThatThrownBy(() -> votoService.votar("agenda-uuid", "session-uuid", request))
+        assertThatThrownBy(() -> votoService.votar("agenda-uuid", request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("already voted");
     }
@@ -140,7 +140,7 @@ class VotoServiceTest {
                 .build();
 
         when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
-        when(sessaoVotacaoService.findByUuid("session-uuid")).thenReturn(sessao);
+        when(sessaoVotacaoService.findByAgendaId(1L)).thenReturn(sessao);
         when(votoRepository.existsByAgendaIdAndAssociateId(1L, "assoc-1")).thenReturn(false);
         when(cpfValidationStrategy.validarCpf("52998224725"))
                 .thenReturn(CpfValidationResponse.builder().status(StatusCpf.UNABLE_TO_VOTE).build());
@@ -151,33 +151,8 @@ class VotoServiceTest {
                 .cpf("52998224725")
                 .build();
 
-        assertThatThrownBy(() -> votoService.votar("agenda-uuid", "session-uuid", request))
+        assertThatThrownBy(() -> votoService.votar("agenda-uuid", request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("UNABLE_TO_VOTE");
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoSessaoNaoPertenceAPauta() {
-        Pauta pauta = Pauta.builder().id(1L).uuid("agenda-uuid").title("Teste").build();
-        Pauta outraPauta = Pauta.builder().id(2L).uuid("outra-uuid").title("Outra").build();
-        SessaoVotacao sessao = SessaoVotacao.builder()
-                .id(1L)
-                .uuid("session-uuid")
-                .agenda(outraPauta)
-                .startedAt(LocalDateTime.now().minusMinutes(1))
-                .endedAt(LocalDateTime.now().plusMinutes(10))
-                .build();
-
-        when(pautaService.findByUuid("agenda-uuid")).thenReturn(pauta);
-        when(sessaoVotacaoService.findByUuid("session-uuid")).thenReturn(sessao);
-
-        VotoRequest request = VotoRequest.builder()
-                .associateId("assoc-1")
-                .voto(VotoEnum.SIM)
-                .build();
-
-        assertThatThrownBy(() -> votoService.votar("agenda-uuid", "session-uuid", request))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("does not belong to this agenda");
     }
 }

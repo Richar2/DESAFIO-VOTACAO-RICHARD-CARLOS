@@ -77,16 +77,16 @@ class PautaControllerTest {
     @Test
     void deveAbrirSessaoEVotar() throws Exception {
         String agendaId = criarPauta("Pauta Votação");
-        String sessionId = abrirSessao(agendaId, 600);
+        abrirSessao(agendaId, 600);
 
-        String votePath = "/api/v1/pautas/" + agendaId + "/sessoes/" + sessionId + "/votos";
+        String votePath = "/api/v1/pautas/" + agendaId + "/votos";
 
         mockMvc.perform(post(votePath)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"associateId\": \"assoc-1\", \"voto\": \"SIM\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.voto").value("SIM"))
-                .andExpect(jsonPath("$.sessionId").value(sessionId));
+                .andExpect(jsonPath("$.sessionId").isNotEmpty());
 
         mockMvc.perform(post(votePath)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,9 +104,9 @@ class PautaControllerTest {
     @Test
     void deveImpedirVotoDuplicado() throws Exception {
         String agendaId = criarPauta("Pauta Voto Duplicado");
-        String sessionId = abrirSessao(agendaId, 600);
+        abrirSessao(agendaId, 600);
 
-        String votePath = "/api/v1/pautas/" + agendaId + "/sessoes/" + sessionId + "/votos";
+        String votePath = "/api/v1/pautas/" + agendaId + "/votos";
 
         mockMvc.perform(post(votePath)
                         .contentType(MediaType.APPLICATION_JSON)
